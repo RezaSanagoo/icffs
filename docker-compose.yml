@@ -35,7 +35,7 @@ services:
       - ./index.html:/app/index.html
       - ./public:/app/public
     environment:
-      - VITE_API_BASE_URL=http://194.60.231.96:5173:8000/api
+      - VITE_API_BASE_URL=http://194.60.231.96:8000/api
     depends_on:
       - backend
     networks:
