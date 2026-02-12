@@ -38,8 +38,9 @@ MIDDLEWARE = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://194.60.231.96:5173",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -144,6 +145,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://194.60.231.96:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -155,6 +157,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://194.60.231.96:5173",
 ]
 CSRF_COOKIE_SECURE = False  # Development only
 CSRF_COOKIE_HTTPONLY = False  # Allow JS to read CSRF token
