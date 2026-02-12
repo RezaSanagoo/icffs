@@ -295,8 +295,6 @@ export default function StoryViewer() {
               transition={{ duration: 0.2 }}
               className="w-full h-full flex items-center justify-center"
             >
-          import React from 'react'
-          import ImageWithInstagramLoader from './ImageWithInstagramLoader'
 
               {currentStory.mediaType === 'image' ? (
                   <ImageWithInstagramLoader src={currentStory.mediaUrl} />
