@@ -4,6 +4,9 @@ import { motion } from 'framer-motion'
 import { useArchiveStories } from '../hooks/useStories'
 import { useActiveProfile } from '../hooks/useProfile'
 import { Story } from '../types'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faThreads } from '@fortawesome/free-brands-svg-icons'
+
 
 export default function StoriesArchive() {
   const navigate = useNavigate()
@@ -77,6 +80,9 @@ export default function StoriesArchive() {
                 src={story.thumbnailUrl || story.mediaUrl}
                 alt="Story"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
               />
               
               {/* Date overlay */}
@@ -87,14 +93,6 @@ export default function StoriesArchive() {
           ))}
         </div>
       )}
-
-      {/* Bottom Banner */}
-      <div className="px-4 py-4">
-          <p className="text-xs text-gray-400 leading-relaxed">
-            Your archived stories aren't visible unless you share them. Stories you shared publicly will be used to improve AI at Meta.{' '}
-            <span className="text-blue-500">Learn more</span>
-          </p>
-      </div>
     </div>
   )
 }

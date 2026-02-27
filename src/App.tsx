@@ -28,7 +28,6 @@ function App() {
         <Route path="/archive/stories" element={<StoriesArchive />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <BottomNav />
     </div>
   )
 }

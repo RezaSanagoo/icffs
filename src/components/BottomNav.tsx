@@ -7,7 +7,7 @@ export default function BottomNav() {
 
   const navItems = [
     { path: '/feed', icon: Home, label: 'Home' },
-    { path: '/activity', icon: SquarePlay, label: 'Messages', hasNotification: true },
+    { path: '/activity', icon: SquarePlay, label: 'Messages',},
     { path: '/add', icon: Send, label: 'Add', disabled: false },
     { path: '/search', icon: Search, label: 'Search' },
     { path: '/profile', icon: User, label: 'Profile' },

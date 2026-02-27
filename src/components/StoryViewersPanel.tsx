@@ -1,12 +1,16 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MoreHorizontal, Reply, BarChart3, Users } from 'lucide-react'
-import { StoryInsights } from '../types'
+import { X, MoreHorizontal, Reply, BarChart3, Users, Settings, Trash2 } from 'lucide-react'
+import { Story, StoryInsights } from '../types'
 
 interface StoryViewersPanelProps {
   isOpen: boolean
   onClose: () => void
   insights: StoryInsights
   storyPreview?: string
+  onSwitchToInsights?: () => void
+  stories?: Story[]
+  activeStoryId?: string
+  onSelectStory?: (storyId: string) => void
 }
 
 export default function StoryViewersPanel({
@@ -14,7 +18,18 @@ export default function StoryViewersPanel({
   onClose,
   insights,
   storyPreview,
+  onSwitchToInsights,
+  stories = [],
+  activeStoryId,
+  onSelectStory,
 }: StoryViewersPanelProps) {
+  const formatViews = (value?: number) => {
+    const num = value || 0
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
+    if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`
+    return `${num}`
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -34,44 +49,82 @@ export default function StoryViewersPanel({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-black rounded-t-3xl z-50 max-h-[90vh] overflow-y-auto"
+            className="fixed inset-0 bg-black text-white z-50 overflow-y-auto"
           >
-            {/* Handle bar */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1 bg-gray-700 rounded-full" />
+            {/* Header */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <button className="text-black" aria-label="Settings">
+                <Settings size={22} />
+              </button>
+              <button onClick={onClose} className="text-black" aria-label="Close">
+                <X size={24} />
+              </button>
             </div>
 
-            {/* Header */}
-            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-800">
-              <div className="flex items-center gap-3">
-                <button onClick={onClose}>
-                  <X size={24} />
-                </button>
-                {storyPreview && (
-                  <div className="w-12 h-20 rounded bg-gray-800 overflow-hidden">
+            {/* Story thumbnails row */}
+            <div className="px-4 pb-2">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2">
+                {stories.map((s) => {
+                  const isActive = !!activeStoryId && s.id === activeStoryId
+                  return (
+                    <button
+                      key={s.id}
+                      className="relative flex-shrink-0"
+                      onClick={() => onSelectStory?.(s.id)}
+                    >
+                      <div
+                        className={`w-14 h-20 rounded-md overflow-hidden bg-gray-200 ${
+                          isActive ? 'ring-2 ring-black' : ''
+                        }`}
+                      >
+                        {s.thumbnailUrl ? (
+                          <img
+                            src={s.thumbnailUrl}
+                            alt="Story thumbnail"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-300" />
+                        )}
+                      </div>
+                      {isActive && (
+                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-gray-50 drop-shadow" />
+                      )}
+                    </button>
+                  )
+                })}
+                {stories.length === 0 && storyPreview && (
+                  <div className="w-14 h-20 rounded-md overflow-hidden bg-gray-200">
                     <img src={storyPreview} alt="Story" className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="w-12 h-20 rounded bg-gray-800 flex items-center justify-center border-2 border-dashed border-gray-600">
-                  <span className="text-2xl">📷</span>
-                </div>
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-6 px-4 py-3 border-b border-gray-800">
-              <button className="flex items-center gap-2">
+            {/* Tabs / insights & viewers toggle */}
+            <div className="flex items-center px-4 border-b border-gray-200">
+              <button
+                className="flex items-center gap-2 py-3 text-gray-500"
+                onClick={onSwitchToInsights}
+              >
                 <BarChart3 size={20} className="text-gray-400" />
               </button>
-              <button className="flex items-center gap-2">
-                <Users size={20} className="text-white" />
-                <span className="text-sm text-white">1</span>
+              <button className="flex items-center gap-2 py-3 border-b-2 border-blue-500 text-blue-600">
+                <Users size={20} className="text-blue-600" />
+                <span className="text-sm font-semibold">
+                  {formatViews(insights.totalViews)}
+                </span>
               </button>
+              <div className="ml-auto py-3 text-gray-500">
+                <Trash2 size={20} />
+              </div>
             </div>
 
             {/* Content */}
-            <div className="px-4 py-4">
-              <h2 className="text-lg font-semibold mb-4">Who viewed this story</h2>
+            <div className="px-4 py-3">
               
               <div className="space-y-3">
                 {insights.viewers.map((viewer, index) => (
@@ -83,20 +136,30 @@ export default function StoryViewersPanel({
                     className="flex items-center justify-between py-2"
                   >
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-instagram-purple to-instagram-pink flex items-center justify-center overflow-hidden">
-                        {viewer.name === 'anonymous' ? (
-                          <span className="text-white text-sm">?</span>
-                        ) : viewer.name === 'yasinorca' ? (
-                          <div className="w-full h-full bg-gradient-to-br from-green-500 via-white to-red-500 flex items-center justify-center">
-                            <span className="text-xs">🇮🇷</span>
-                          </div>
+                      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                        {viewer.avatarUrl ? (
+                          <img
+                            src={viewer.avatarUrl}
+                            alt={viewer.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
                         ) : (
-                          <span className="text-white text-sm font-semibold">
-                            {viewer.name.charAt(0).toUpperCase()}
+                          <span className="text-gray-500 text-sm font-semibold">
+                            {(viewer.name || '?').charAt(0).toUpperCase()}
                           </span>
                         )}
                       </div>
-                      <span className="text-sm font-medium">{viewer.name}</span>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-semibold text-black">
+                          {viewer.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {viewer.name}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <MoreHorizontal size={20} className="text-gray-400" />

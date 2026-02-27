@@ -5,6 +5,7 @@ import { useStories } from '../hooks/useStories'
 import StoryRing from '../components/StoryRing'
 import Skeleton from '../components/Skeleton'
 import ProfileHeader from '../components/ProfileHeader'
+import BottomNav from '../components/BottomNav'
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -15,8 +16,9 @@ export default function Profile() {
 
   if (profileLoading) {
     return (
+      <>
       <div className="pb-20">
-        <div className="px-4 py-6">
+        <div className="px-">
           <Skeleton className="h-20 w-20 rounded-full mb-4" />
           <Skeleton className="h-6 w-32 mb-2" />
           <Skeleton className="h-4 w-48 mb-4" />
@@ -27,6 +29,8 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      <BottomNav />
+      </>
     )
   }
 
@@ -39,6 +43,7 @@ export default function Profile() {
   // }
 
   return (
+    <>
     <div className="pb-20 bg-black min-h-screen">
       {/* Header */}
       <ProfileHeader username={profile?.username || ''} notificationCount={9} />
@@ -94,9 +99,22 @@ export default function Profile() {
         {/* Bio */}
         {profile?.bio && (
           <div className="mb-3">
-            <p className="text-sm">{profile.bio}</p>
+            <p className="text-sm whitespace-pre-line">{profile.bio}</p>
           </div>
         )}
+
+        {/* Professional dashboard */}
+        <div className="mb-3 rounded-lg bg-gray-800 px-3 py-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Professional dashboard</p>
+              <p className="text-xs text-gray-400">
+                13.2M accounts reached in the last 30 days
+              </p>
+            </div>
+            <ChevronDown size={16} className="text-gray-400" />
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-2 mb-4">
@@ -166,6 +184,8 @@ export default function Profile() {
         )}
       </div>
     </div>
+    <BottomNav />
+    </>
   )
 }
 

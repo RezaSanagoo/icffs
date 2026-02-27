@@ -1,3 +1,4 @@
+import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useStoryInsightsOptions } from '../hooks/useStoryInsightsOptions'
 import { ArrowLeft, X, Settings, Trash2, MoreHorizontal, BarChart3, Users, Info } from 'lucide-react'
@@ -12,7 +13,7 @@ export default function StoryInsights() {
 
   const { data: insightsOptions, isLoading: optionsLoading } = useStoryInsightsOptions();
   const { data: insightsData, isLoading } = useStoryInsights(id || '')
-  const insights = insightsData?.insights
+  const insights = insightsData
 
   // تب فعال (کلید گزینه)
   const [activeTab, setActiveTab] = React.useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function StoryInsights() {
       const firstEnabled = insightsOptions.find(opt => opt.enabled);
       setActiveTab(firstEnabled ? firstEnabled.key : insightsOptions[0].key);
     }
-  }, [insightsOptions]);
+  }, [insightsOptions, activeTab]);
 
   if (isLoading || optionsLoading) {
     return (

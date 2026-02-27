@@ -1,6 +1,10 @@
-import { useQuery } from 'react-query';
-import { getStoryInsightsOptions, StoryInsightsOption } from '../utils/insightsOptionsApi';
+import { useQuery } from '@tanstack/react-query'
+import { getStoryInsightsOptions, StoryInsightsOption } from '../utils/insightsOptionsApi'
 
 export function useStoryInsightsOptions() {
-  return useQuery<StoryInsightsOption[]>(['story-insights-options'], getStoryInsightsOptions);
+  return useQuery<StoryInsightsOption[]>({
+    queryKey: ['story-insights-options'],
+    queryFn: getStoryInsightsOptions,
+    retry: false,
+  })
 }

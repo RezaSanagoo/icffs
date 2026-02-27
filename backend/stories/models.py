@@ -84,6 +84,7 @@ class Story(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='stories')
     media = models.FileField(upload_to='stories/')
+    thumbnail = models.ImageField(upload_to='stories/thumbnails/', blank=True, null=True)
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()

@@ -2,11 +2,13 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { useStories, useStoryView, useStoryInsights } from '../hooks/useStories'
+import { useArchiveStories, useStoryView, useStoryInsights } from '../hooks/useStories'
+import { useActiveProfile } from '../hooks/useProfile'
 
 import StoryInsightsPanel from './StoryInsightsPanel'
 import StoryViewersPanel from './StoryViewersPanel'
 import ImageWithInstagramLoader from './ImageWithInstagramLoader'
+import StoryInsightsDrawer from './StoryInsightsDrawer'
 
 const STORY_DURATION = 5000 // 5 seconds
 
@@ -14,7 +16,8 @@ export default function StoryViewer() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const storyId = searchParams.get('story')
-  const { data: storiesData, isLoading } = useStories()
+  const { data: storiesData, isLoading, isError } = useArchiveStories()
+  const { data: activeProfile } = useActiveProfile()
   const viewMutation = useStoryView()
   const { data: insightsData } = useStoryInsights(storyId || '')
 
@@ -31,10 +34,13 @@ export default function StoryViewer() {
   const longPressTimerRef = useRef<number | null>(null)
   const viewedStoriesRef = useRef<Set<string>>(new Set())
 
-  const stories = storiesData?.stories || []
-  const currentStory = storyId
-    ? stories.find((s) => s.id === storyId) || stories[currentIndex]
-    : stories[currentIndex]
+  const allStories = storiesData?.stories || []
+  const stories =
+    activeProfile?.id
+      ? allStories.filter((s) => s.profileId === activeProfile.id)
+      : allStories
+  const storyById = storyId ? stories.find((s) => s.id === storyId) : undefined
+  const currentStory = storyById ?? stories[currentIndex] ?? stories[0]
 
   useEffect(() => {
     if (storyId && stories.length > 0) {
@@ -44,6 +50,12 @@ export default function StoryViewer() {
       }
     }
   }, [storyId, stories])
+
+  useEffect(() => {
+    if (stories.length > 0 && currentIndex > stories.length - 1) {
+      setCurrentIndex(0)
+    }
+  }, [stories.length, currentIndex])
 
   useEffect(() => {
     if (!currentStory) {
@@ -154,10 +166,10 @@ export default function StoryViewer() {
     const deltaX = touchStartRef.current.x - touch.clientX
     const deltaY = touchStartRef.current.y - touch.clientY
 
-    // Handle swipe up for insights
+    // Handle swipe up for viewers/insights panel
     if (isSwiping && deltaY > 100) {
       if (insightsData) {
-        setShowInsights(true)
+        setShowInsights(true) 
       }
       setIsSwiping(false)
       setSwipeY(0)
@@ -192,7 +204,7 @@ export default function StoryViewer() {
     touchStartRef.current = null
   }
 
-  if (isLoading || !currentStory) {
+  if (isLoading) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -200,6 +212,29 @@ export default function StoryViewer() {
         className="fixed inset-0 bg-black z-50 flex items-center justify-center"
       >
         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      </motion.div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+      >
+        <div className="text-white text-center px-6">
+          <p className="text-lg mb-2">Failed to load stories</p>
+          <p className="text-sm text-gray-400 mb-4">
+            Please check backend/API and try again.
+          </p>
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 bg-instagram-blue rounded-lg"
+          >
+            Close
+          </button>
+        </div>
       </motion.div>
     )
   }
@@ -213,6 +248,26 @@ export default function StoryViewer() {
       >
         <div className="text-white text-center">
           <p className="text-lg mb-4">No stories available</p>
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 bg-instagram-blue rounded-lg"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    )
+  }
+
+  if (!currentStory) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+      >
+        <div className="text-white text-center px-6">
+          <p className="text-lg mb-2">Story not found</p>
           <button
             onClick={handleClose}
             className="px-4 py-2 bg-instagram-blue rounded-lg"
@@ -268,8 +323,11 @@ export default function StoryViewer() {
 
         {/* Story content */}
         <motion.div
-          className="w-full h-full flex items-center justify-center"
-          style={{ y: -swipeY }}
+          className="w-full h-full flex items-center justify-center bg-black"
+          style={{
+            y: showInsights || showViewers ? -80 : -swipeY,
+            scale: showInsights || showViewers ? 0.85 : 1,
+          }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -293,7 +351,7 @@ export default function StoryViewer() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.1 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full flex items-center justify-center"
+              className="w-full h-full flex items-center justify-center bg-black"
             >
 
               {currentStory.mediaType === 'image' ? (
@@ -301,6 +359,7 @@ export default function StoryViewer() {
               ) : (
                 <video
                   src={currentStory.mediaUrl}
+                  poster={currentStory.thumbnailUrl || undefined}
                   className="max-w-full max-h-full object-contain"
                   autoPlay
                   playsInline
@@ -325,37 +384,28 @@ export default function StoryViewer() {
               transition={{ repeat: Infinity, duration: 1.5 }}
               className="bg-black/50 rounded-full px-4 py-2"
             >
-              <span className="text-white text-xs">Swipe up to see insights</span>
+              <span className="text-white text-xs">
+                Swipe up to see viewers & insights
+              </span>
             </motion.div>
           </motion.div>
         )}
       </motion.div>
 
       {/* Insights Panel */}
-      {insightsData && (
-        <StoryInsightsPanel
-          isOpen={showInsights}
-          onClose={() => {
-            setShowInsights(false)
-            setIsPaused(false)
-          }}
-          insights={insightsData}
-          storyPreview={currentStory.mediaUrl}
-        />
-      )}
-
-      {/* Viewers Panel */}
-      {insightsData && (
-        <StoryViewersPanel
-          isOpen={showViewers}
-          onClose={() => {
-            setShowViewers(false)
-            setIsPaused(false)
-          }}
-          insights={insightsData}
-          storyPreview={currentStory.mediaUrl}
-        />
-      )}
+<StoryInsightsDrawer
+  isOpen={showInsights}
+  onClose={() => {
+    setShowInsights(false)
+    setIsPaused(false)
+  }}
+  insights={insightsData}
+  stories={stories}
+  activeStoryId={currentStory.id}
+  onSelectStory={(id) => {
+    navigate(`/stories?story=${id}`, { replace: true })
+  }}
+/>
     </>
   )
 }

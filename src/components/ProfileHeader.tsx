@@ -1,7 +1,13 @@
-import { ChevronDown, Bell, Menu } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useProfiles, useSetActiveProfile } from '../hooks/useProfiles'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faThreads } from '@fortawesome/free-brands-svg-icons'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
+
+
+
 
 interface ProfileHeaderProps {
   username: string
@@ -17,9 +23,19 @@ export default function ProfileHeader({
   const setActive = useSetActiveProfile()
 
   return (
-    <header className="sticky top-0 bg-black z-50 border-b border-gray-800">
+    <header className="sticky  bg-black z-50 py-2">
+      
+
       {/* Main header */}
       <div className="px-5 py-3 pb-2 flex items-center justify-between">
+        <div>
+      <button className="relative text-white">
+            <FontAwesomeIcon icon={faPlus} className="text-[20px]" />
+        </button>        
+      <button className="relative text-black">
+            <FontAwesomeIcon icon={faPlus} className="text-[20px]" />
+        </button>    
+        </div>    
         <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setShowDropdown(!showDropdown)}
@@ -63,14 +79,14 @@ export default function ProfileHeader({
         </div>
         
         <div className="flex items-center gap-4">
-          {notificationCount > 0 && (
-            <div className="relative">
-              <Bell size={24} />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+          <button className="relative">
+            <FontAwesomeIcon icon={faThreads} className="w-6 h-6 text-white" />
+            {notificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
-            </div>
-          )}
+            )}
+          </button>
           <Link to="/settings">
             <Menu size={24} />
           </Link>

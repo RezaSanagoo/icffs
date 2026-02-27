@@ -2,10 +2,11 @@ import React from 'react'
 
 export default function ImageWithInstagramLoader({ src }: { src?: string }) {
   const [loaded, setLoaded] = React.useState(false)
+  const [hasError, setHasError] = React.useState(false)
   const isEmpty = !src
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {!loaded && (
+    <div className="relative w-full h-full flex items-center justify-center object-contain">
+      {!loaded && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           {/* Spinner اینستاگرام */}
           <div className="w-16 h-16 flex items-center justify-center">
@@ -25,7 +26,7 @@ export default function ImageWithInstagramLoader({ src }: { src?: string }) {
           </div>
         </div>
       )}
-      {isEmpty ? (
+      {isEmpty || hasError ? (
         <div className="w-40 h-72 bg-gray-800 flex items-center justify-center rounded-xl">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -40,6 +41,10 @@ export default function ImageWithInstagramLoader({ src }: { src?: string }) {
           className="max-w-full max-h-full object-contain rounded-xl"
           style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
           onLoad={() => setLoaded(true)}
+          onError={() => {
+            setHasError(true)
+            setLoaded(true)
+          }}
         />
       )}
     </div>

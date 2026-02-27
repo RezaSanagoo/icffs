@@ -43,7 +43,7 @@ class StoryInsightsOptionListView(APIView):
             for o in options
         ]
         return Response({'options': data})
-from .utils import process_image, process_video
+from .utils import process_video_with_thumbnail
 
 
 
@@ -145,22 +145,17 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Determine media type
-        media_type = 'image'
-        if media_file.content_type.startswith('video/'):
-            media_type = 'video'
-        elif not media_file.content_type.startswith('image/'):
+        # Only video stories are supported
+        if not media_file.content_type or not media_file.content_type.startswith('video/'):
             return Response(
-                {'error': 'Invalid media type'},
+                {'error': 'Only video stories are supported'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        media_type = 'video'
         
         # Process media
         try:
-            if media_type == 'image':
-                processed_media = process_image(media_file)
-            else:
-                processed_media = process_video(media_file)
+            processed_media, thumbnail = process_video_with_thumbnail(media_file)
         except Exception as e:
             return Response(
                 {'error': f'Media processing failed: {str(e)}'},
@@ -171,6 +166,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         story = Story.objects.create(
             profile=profile,
             media=processed_media,
+            thumbnail=thumbnail,
             media_type=media_type,
         )
         

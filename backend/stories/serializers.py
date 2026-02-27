@@ -97,14 +97,15 @@ class StorySerializer(serializers.ModelSerializer):
         return ''
     
     def get_thumbnailUrl(self, obj):
-        """Get thumbnail URL (compressed version)."""
-        if obj.media:
-            # Add ?q=40 parameter for Pillow image processing (if using django-imagekit or similar)
-            # For now, return media URL with query param for client-side compression
-            base_url = self.get_mediaUrl(obj)
-            if base_url:
-                return f"{base_url}?q=40"
-            return ''
+        """Get thumbnail URL."""
+        if obj.thumbnail:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.thumbnail.url)
+            return obj.thumbnail.url
+        # Backward compatibility: for image stories without thumbnail, use media url
+        if obj.media and getattr(obj, 'media_type', None) == 'image':
+            return self.get_mediaUrl(obj)
         return ''
     
     def to_representation(self, instance):
