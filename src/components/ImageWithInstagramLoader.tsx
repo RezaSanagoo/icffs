@@ -38,7 +38,7 @@ export default function ImageWithInstagramLoader({ src }: { src?: string }) {
         <img
           src={src}
           alt="Story"
-          className="max-w-full max-h-full object-contain rounded-xl"
+          className="max-w-full max-h-full object-cover rounded-xl"
           style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
           onLoad={() => setLoaded(true)}
           onError={() => {

@@ -1,0 +1,97 @@
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/IRANSans.ttf") format("ttf");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/IRANSans_Bold.ttf") format("ttf");
+    font-weight: 700;
+    font-style: normal;
+}
+
+
+/* فونت کل پنل */
+html,
+body,
+* {
+    font-family: "Vazirmatn", sans-serif;
+}
+
+
+/* راستچین کامل */
+html {
+    direction: rtl;
+}
+
+body {
+    direction: rtl;
+    text-align: right;
+}
+
+.text-left {
+    text-align: right !important;
+}
+
+
+/* سایدبار */
+#sidebar {
+    right: 0;
+    left: auto;
+}
+
+
+/* جابه‌جایی محتوای اصلی */
+#content {
+    margin-left: 16rem;
+}
+#caption  a{
+    direction: rtl !impotant;
+}
+
+
+/* آیکون‌ها و منوها */
+.material-symbols-outlined {
+    direction: rtl;
+    
+    font-family: 'Material Symbols Outlined';
+}
+.mr-3{
+    margin-left: 0.75rem !important;
+    margin-right: 0 !important;
+}
+
+
+/* فرم‌ها */
+input,
+textarea,
+select {
+    text-align: right !important;
+    direction: rtl;
+}
+
+
+/* جدول‌ها */
+table {
+    direction: rtl;
+}
+
+th,
+td {
+    text-align: right !important;
+}
+
+
+/* دکمه‌ها */
+button,
+a {
+    font-family: "Vazirmatn", sans-serif !important;
+}
+
+
+/* پیام‌ها */
+.messages {
+    direction: rtl;
+} */

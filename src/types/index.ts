@@ -1,3 +1,10 @@
+export interface Highlight {
+  id: string
+  title: string
+  coverImage?: string
+  createdAt?: string
+}
+
 export interface Profile {
   id: string
   username: string
@@ -8,17 +15,49 @@ export interface Profile {
   followersCount: number
   followingCount: number
   bio?: string
+  reachCount: number
+  postCount: number
+  lastPostImage?: string
+  highlights: Highlight[]
+  viewerImage: string
+  viewerImage2: string
+}
+
+export interface StoryMentionTarget {
+  id: string
+  username: string
+  display_name: string
+  avatarUrl: string
+  url: string
+}
+
+interface StoryInteractiveElement {
+  id: string
+  elementType: 'link' | 'mention'
+  title: string
+  url: string
+  mentionTarget: StoryMentionTarget | null
+  x: number
+  y: number
+  order: number
 }
 
 export interface Story {
   id: string
-  profileId?: string
+  profileId: string
   mediaUrl: string
-  thumbnailUrl?: string
+  thumbnailUrl: string
   mediaType: 'image' | 'video'
   createdAt: string
   expiresAt: string
+  duration: number
+  viewcount: number
+  tag: string
+  stickerTaps: boolean
+  LinkClicks: boolean
+  interactiveElements: StoryInteractiveElement[]
 }
+
 
 export interface StoryInsights {
   totalViews: number

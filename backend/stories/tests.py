@@ -3,7 +3,8 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework.test import APIClient
 from rest_framework import status
-from .models import Profile, Story, StoryView
+from .models import Profile, Story, StoryView, Highlight
+from .serializers import ProfileSerializer
 import tempfile
 from PIL import Image
 from io import BytesIO
@@ -29,14 +30,40 @@ class ProfileAPITestCase(TestCase):
             display_name='Test User',
             followers_count=100,
             following_count=50,
+            post_count=33,
+            reach_count=44,
         )
     
     def test_get_profile(self):
-        """Test getting profile."""
-        response = self.client.get('/api/profile/')
+        """Test getting active profile from the endpoint used by the frontend."""
+        response = self.client.get('/api/profile/active/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('profile', response.data)
-        self.assertEqual(response.data['profile']['username'], 'testuser')
+        self.assertEqual(response.data['username'], 'testuser')
+        self.assertEqual(response.data['fullName'], 'Test User')
+
+    def test_serializer_exposes_frontend_profile_fields(self):
+        """Ensure serializer exposes the frontend-friendly field names used by the app."""
+        serializer = ProfileSerializer(self.profile)
+        data = serializer.data
+
+        self.assertEqual(data['fullName'], 'Test User')
+        self.assertEqual(data['postsCount'], 33)
+        self.assertEqual(data['followersCount'], 100)
+        self.assertEqual(data['followingCount'], 50)
+        self.assertEqual(data['postCount'], 33)
+        self.assertEqual(data['reachCount'], 44)
+        self.assertEqual(data['lastPostImage'], '')
+
+    def test_serializer_exposes_highlights(self):
+        """Ensure highlights are serialized for the frontend profile view."""
+        Highlight.objects.create(profile=self.profile, title='Summer')
+
+        serializer = ProfileSerializer(self.profile)
+        data = serializer.data
+
+        self.assertEqual(len(data['highlights']), 1)
+        self.assertEqual(data['highlights'][0]['title'], 'Summer')
+        self.assertEqual(data['highlights'][0]['coverImage'], '')
 
 
 class StoryAPITestCase(TestCase):
@@ -61,6 +88,31 @@ class StoryAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('stories', response.data)
         self.assertEqual(len(response.data['stories']), 1)
+
+    def test_archive_returns_only_active_profile_stories_with_duration(self):
+        """Archive should return only the active profile's stories and include duration."""
+        other_profile = Profile.objects.create(username='otheruser', display_name='Other User')
+        other_story = Story.objects.create(
+            profile=other_profile,
+            media=create_test_image(),
+            media_type='image',
+            expires_at=timezone.now() + timedelta(hours=24),
+            duration=15,
+        )
+        self.story.duration = 7
+        self.story.save(update_fields=['duration'])
+
+        self.client.session['active_profile_id'] = str(self.profile.id)
+        self.client.session.save()
+
+        response = self.client.get('/api/stories/archive/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('stories', response.data)
+        story_ids = [s['id'] for s in response.data['stories']]
+        self.assertIn(str(self.story.id), story_ids)
+        self.assertNotIn(str(other_story.id), story_ids)
+        self.assertGreaterEqual(len(response.data['stories']), 1)
+        self.assertEqual(response.data['stories'][0]['duration'], 7)
     
     def test_list_expired_stories(self):
         """Test that expired stories are not listed."""

@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, User } from 'lucide-react'
+import { Search, User } from 'lucide-react'
+import HomeIcon from '/svg/Home.svg'
 import SquarePlay from './sp';
 import Send from './sn';
 export default function BottomNav() {
   const location = useLocation()
-
+  const reels = '/2.png'
   const navItems = [
-    { path: '/feed', icon: Home, label: 'Home' },
-    { path: '/activity', icon: SquarePlay, label: 'Messages',},
+    { path: '/feed', icon: HomeIcon, label: 'Home', isSvg: true },
+    { path: '/activity', icon: reels, label: 'Messages', isImg: true },
     { path: '/add', icon: Send, label: 'Add', disabled: false },
     { path: '/search', icon: Search, label: 'Search' },
     { path: '/profile', icon: User, label: 'Profile' },
@@ -30,15 +31,30 @@ export default function BottomNav() {
                   : ''
               }`}
             >
-              <Icon
-                size={24}
-                className={isActive ? 'text-white' : 'text-white'}
-                fill={isActive ? 'white' : 'none'}
-                strokeWidth={isActive ? 0 : 1.5}
-              />
-              {item.hasNotification && (
-                <span className="absolute top-2 right-1/2 translate-x-3 w-1.5 h-1.5 bg-red-500 rounded-full" />
+              {item.isSvg && !item.isImg ? (
+                <img
+                  src={Icon as string}
+                  alt={item.label}
+                  className="w-6 h-6"
+                  style={{ filter: isActive ? 'brightness(1)' : 'brightness(0.75)' }}
+                />
+              ) : item.isImg ? (
+                <img
+                  src={Icon as string}
+                  alt={item.label}
+                  className="w-6 h-6  p-0.5"
+                />
+              ) : (
+                <Icon
+                  size={24}
+                  className={isActive ? 'text-white' : 'text-white'}
+                  fill={isActive ? 'white' : 'none'}
+                  strokeWidth={isActive ? 0 : 1.5}
+                />
               )}
+              {/* {item.hasNotification && (
+                <span className="absolute top-2 right-1/2 translate-x-3 w-1.5 h-1.5 bg-red-500 rounded-full" />
+              )} */}
             </Link>
           )
         })}

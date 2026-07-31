@@ -1,30 +1,23 @@
+from django.db.migrations import serializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
 from django.db.models import Q
-from django.middleware.csrf import get_token
-from .models import Profile, Story, StoryView, StoryInsightsOption
+from .models import Highlight, Profile, Story, StoryView, StoryInsightsOption, StoryInteractiveElement
 from .serializers import (
     ProfileSerializer,
     StorySerializer,
     StoryListSerializer,
     StoryViewSerializer,
     StoryInsightsSerializer,
+    HighlightSerializer,
 )
 from rest_framework.views import APIView
 
 # Endpoint: لیست گزینه‌های StoryInsightsOption
 from rest_framework.permissions import AllowAny
-
-class CSRFTokenView(APIView):
-    permission_classes = [AllowAny]
-    
-    def get(self, request):
-        """Get CSRF token for POST requests."""
-        token = get_token(request)
-        return Response({'csrfToken': token})
 
 class StoryInsightsOptionListView(APIView):
     permission_classes = [AllowAny]
@@ -47,7 +40,9 @@ from .utils import process_video_with_thumbnail
 
 
 
+
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
     """ViewSet for Profile."""
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
@@ -60,6 +55,25 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(profile)
         return Response({'profile': serializer.data})
     
+    def get_highlight_queryset(self):
+        """Return highlights for the active profile."""
+        profile_id = self.request.session.get('active_profile_id')
+        if profile_id:
+            try:
+                return Highlight.objects.filter(profile_id=profile_id)
+            except (ValueError, Profile.DoesNotExist):
+                pass
+        profile = Profile.objects.first()
+        if profile:
+            return Highlight.objects.filter(profile_id=profile.id)
+        return Highlight.objects.none()
+
+    @action(detail=False, methods=['get'])
+    def highlights(self, request):
+        """Return all highlights for the active profile."""
+        queryset = self.get_highlight_queryset()
+        serializer = HighlightSerializer(queryset, many=True, context={'request': request})
+        return Response({'highlights': serializer.data})
 
     def get_queryset(self):
         """Return all profiles for admin and selection."""
@@ -98,7 +112,9 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+
 class StoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     """ViewSet for Story."""
     queryset = Story.objects.all()
     serializer_class = StorySerializer
@@ -107,10 +123,23 @@ class StoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return stories. List only non-expired, but insights can access any story."""
         return Story.objects.all().order_by('-created_at')
+
+    def _get_active_profile(self, request):
+        """Return the active profile from session or fall back to the first profile."""
+        profile_id = request.session.get('active_profile_id')
+        if profile_id:
+            try:
+                return Profile.objects.get(id=profile_id)
+            except Profile.DoesNotExist:
+                pass
+        return Profile.objects.first()
     
     def list(self, request, *args, **kwargs):
         """List stories endpoint - only non-expired."""
         queryset = self.get_queryset().filter(expires_at__gt=timezone.now())
+        profile = self._get_active_profile(request)
+        if profile is not None:
+            queryset = queryset.filter(profile=profile)
         serializer = StorySerializer(queryset, many=True, context={'request': request})
         return Response({'stories': serializer.data})
     
@@ -118,9 +147,16 @@ class StoryViewSet(viewsets.ModelViewSet):
     def archive(self, request):
         """Get all stories (including expired) for archive view."""
         queryset = self.get_queryset()
+        profile = self._get_active_profile(request)
+
+        if profile is not None:
+            queryset = queryset.filter(profile=profile)
+
+        queryset = queryset.order_by('created_at')  # oldest to newest
+
         serializer = StorySerializer(queryset, many=True, context={'request': request})
         return Response({'stories': serializer.data})
-    
+
     def create(self, request, *args, **kwargs):
         """Create a new story for active profile with media processing."""
         profile_id = request.session.get('active_profile_id')
@@ -156,6 +192,9 @@ class StoryViewSet(viewsets.ModelViewSet):
         # Process media
         try:
             processed_media, thumbnail = process_video_with_thumbnail(media_file)
+            print("processed_media:", processed_media, type(processed_media), getattr(processed_media, "name", None))
+            print("thumbnail:", thumbnail, type(thumbnail), getattr(thumbnail, "name", None), bool(thumbnail))
+
         except Exception as e:
             return Response(
                 {'error': f'Media processing failed: {str(e)}'},
@@ -163,16 +202,56 @@ class StoryViewSet(viewsets.ModelViewSet):
             )
         
         # Create story
-        story = Story.objects.create(
+        story = Story(
             profile=profile,
-            media=processed_media,
-            thumbnail=thumbnail,
-            media_type=media_type,
+            media_type='video',
         )
+
+        if processed_media:
+            story.media.save(processed_media.name, processed_media, save=False)
+
+        if thumbnail:
+            story.thumbnail.save(thumbnail.name, thumbnail, save=False)
+
+        story.save()
+
+        serializer = self.get_serializer(story)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         
         serializer = self.get_serializer(story)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
+    @action(detail=True, methods=['post'], url_path='interaction')
+    def interaction(self, request, pk=None):
+        """Track story interactive element tap/click."""
+        story = self.get_object()
+        element_id = request.data.get('element_id')
+
+        element = StoryInteractiveElement.objects.filter(
+            id=element_id,
+            story=story,
+            is_active=True,
+        ).first()
+
+        if not element:
+            return Response(
+                {'error': 'Interactive element not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if element.element_type == StoryInteractiveElement.TYPE_LINK:
+            story.link_clicks = True
+            story.save(update_fields=['link_clicks'])
+        else:
+            story.sticker_taps = True
+            story.save(update_fields=['sticker_taps'])
+
+        return Response({
+            'status': 'interaction registered',
+            'elementType': element.element_type,
+        })
+        
     @action(detail=True, methods=['post'])
     def view(self, request, pk=None):
         """Register a story view."""
@@ -198,8 +277,9 @@ class StoryViewSet(viewsets.ModelViewSet):
         story = self.get_object()
         if profile_id and str(story.profile_id) != str(profile_id):
             return Response({'error': 'Access denied: story does not belong to active profile.'}, status=403)
-        serializer = StoryInsightsSerializer(story)
+        serializer = StoryInsightsSerializer(story, context={'request': request})
         return Response(serializer.data)
+
     
     def _get_client_ip(self, request):
         """Get client IP address."""
@@ -212,6 +292,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
 
 from rest_framework.views import APIView
+
 
 class SettingsAPIView(APIView):
     """API view for settings."""

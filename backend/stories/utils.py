@@ -258,3 +258,53 @@ def extract_thumbnail_from_video_path(
         except Exception:
             pass
 
+import os
+import tempfile
+import subprocess
+from uuid import uuid4
+from django.core.files.base import ContentFile
+
+
+def generate_video_thumbnail(video_file):
+    """
+    Generate thumbnail from a video FileField.
+    Returns ContentFile with name.
+    """
+
+    input_path = video_file.path
+
+    output_filename = f"story_thumb_{uuid4().hex}.jpg"
+
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_thumb:
+        output_path = temp_thumb.name
+
+    try:
+        command = [
+            "ffmpeg",
+            "-y",
+            "-i", input_path,
+            "-ss", "00:00:01",
+            "-vframes", "1",
+            "-q:v", "2",
+            output_path,
+        ]
+
+        subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True
+        )
+
+        with open(output_path, "rb") as f:
+            thumbnail_content = ContentFile(f.read(), name=output_filename)
+
+        return thumbnail_content
+
+    except Exception as e:
+        print("Thumbnail generation failed:", e)
+        return None
+
+    finally:
+        if os.path.exists(output_path):
+            os.remove(output_path)

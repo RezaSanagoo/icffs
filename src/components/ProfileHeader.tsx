@@ -23,12 +23,12 @@ export default function ProfileHeader({
   const setActive = useSetActiveProfile()
 
   return (
-    <header className="sticky  bg-black z-50 py-2">
+    <header className="sticky  bg-black z-50">
       
 
       {/* Main header */}
-      <div className="px-5 py-3 pb-2 flex items-center justify-between">
-        <div>
+      <div className="px-3 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
       <button className="relative text-white">
             <FontAwesomeIcon icon={faPlus} className="text-[20px]" />
         </button>        
@@ -41,7 +41,7 @@ export default function ProfileHeader({
             onClick={() => setShowDropdown(!showDropdown)}
             className="flex items-center gap-2 hover:opacity-70 transition"
           >
-            <h1 className="text-base font-semibold">{username}</h1>
+            <h1 className="text-xl font-semibold">{username}</h1>
             <ChevronDown size={16} className="text-gray-400" />
           </button>
 
@@ -80,12 +80,12 @@ export default function ProfileHeader({
         
         <div className="flex items-center gap-4">
           <button className="relative">
-            <FontAwesomeIcon icon={faThreads} className="w-6 h-6 text-white" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </span>
-            )}
+            <FontAwesomeIcon icon={faThreads} className="w-5 h-5 text-white" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-semibold rounded-full w-3 h-3 flex items-center justify-center">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
           </button>
           <Link to="/settings">
             <Menu size={24} />

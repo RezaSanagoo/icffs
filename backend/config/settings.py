@@ -15,10 +15,16 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "194.60.231.96",
+    "192.168.1.69",
+    "be.1nsta.ir",
 ]
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',    
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.import_export',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -35,18 +41,12 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://194.60.231.96:5173",
-    "http://194.60.231.96:8000",
-]
+
 
 ROOT_URLCONF = 'config.urls'
 
@@ -70,32 +70,31 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 
-# --- PostgreSQL config (commented for later use) ---
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': config('DB_NAME', default='insta_analytics'),
-#         'USER': config('DB_USER', default='postgres'),
-#         'PASSWORD': config('DB_PASSWORD', default='postgres'),
-#         'HOST': config('DB_HOST', default='localhost'),
-#         'PORT': config('DB_PORT', default='5432'),
-#     }
-# }
-# # Parse DATABASE_URL if provided
-# if config('DATABASE_URL', default=None):
-#     try:
-#         import dj_database_url
-#         DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'))
-#     except ImportError:
-#         pass
-
-# --- SQLite config (active) ---
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': "dbivmm_db",
+        'USER': "root",
+        'PASSWORD': "lB9cEYknLU3g9unHhlPg",
+        'HOST': "remote.runflare.com",
+        'PORT': "31332",
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': (
+                "SET sql_mode='STRICT_TRANS_TABLES';"
+                "SET default_storage_engine=INNODB;"  # ← جداول جدید همیشه InnoDB میشن
+            ),
+        }
     }
 }
+
+# # --- SQLite config (active) ---
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -114,14 +113,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'fa-ir'
+
+TIME_ZONE = "Asia/Tehran"
+
+
 USE_I18N = True
+USE_L10N = True
+
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'static'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -130,19 +134,27 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework
+
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.MultiPartParser',
         'rest_framework.parsers.FormParser',
     ],
 }
+
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
@@ -152,23 +164,18 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://194.60.231.96:5173",
     "http://194.60.231.96:8000",
+    "http://192.168.1.69:5173",
+    "http://192.168.1.69:8000",
+    "https://be.1nsta.ir",
+    "https://1nsta.ir",
+    "http://be.1nsta.ir",
+    "http://1nsta.ir",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_EXPOSE_HEADERS = ['Content-Type']
 
-# CSRF settings
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://194.60.231.96:5173",
-    "http://194.60.231.96:8000",
-]
-CSRF_COOKIE_SECURE = False  # Development only
-CSRF_COOKIE_HTTPONLY = False  # Allow JS to read CSRF token
-CSRF_COOKIE_SAMESITE = 'Lax'  # Allow credentials
+
 
 
 # Media processing settings
@@ -178,3 +185,84 @@ IMAGE_MAX_WIDTH = 1080
 IMAGE_JPEG_QUALITY = 70
 VIDEO_MAX_RESOLUTION = (1280, 720)  # 720p
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://be.1nsta.ir",
+    "http://1nsta.ir",
+    "https://1nsta.ir",
+
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+
+    "http://192.168.1.69:5173",
+    "http://192.168.1.69:8000",
+
+    "http://194.60.231.96:5173",
+    "http://194.60.231.96:8000",
+]
+
+
+STATICFILES_DIRS = [
+    BASE_DIR / "stati",
+]
+
+UNFOLD = {
+    "SITE_TITLE": "پنل اینستا کِلون",
+    "SITE_HEADER": "مدیریت اینستا کِلون",
+    "SITE_SYMBOL": "insights",
+    "SHOW_HISTORY": True,
+    "RTL": True,
+    "STYLES": [
+        "/static/css/unfold-custom.css",
+    ],
+    "COLORS": {
+        "primary": {
+            "50": "253 242 248",
+            "100": "252 231 243",
+            "200": "251 207 232",
+            "300": "249 168 212",
+            "400": "244 114 182",
+            "500": "236 72 153",
+            "600": "219 39 119",
+            "700": "190 24 93",
+            "800": "157 23 77",
+            "900": "131 24 67",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "navigation": [
+            {
+                "title": "مدیریت پیج‌ها",
+                "items": [
+                    {
+                        "title": "پروفایل‌ها",
+                        "icon": "person",
+                        "link": "/admin/stories/profile/",
+                    },
+                    {
+                        "title": "هایلایت‌ها",
+                        "icon": "collections_bookmark",
+                        "link": "/admin/stories/highlight/",
+                    },
+                ],
+            },
+            {
+                "title": "مدیریت استوری",
+                "items": [
+                    {
+                        "title": "استوری‌ها",
+                        "icon": "auto_stories",
+                        "link": "/admin/stories/story/",
+                    },
+                    {
+                        "title": "اهداف منشن",
+                        "icon": "alternate_email",
+                        "link": "/admin/stories/storymentiontarget/",
+                    },
+                ],
+            },
+        ],
+    },
+}

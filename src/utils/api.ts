@@ -1,36 +1,9 @@
 import { StoryInsights } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
-
-let csrfToken: string = ''
-
-async function getCSRFToken(): Promise<string> {
-  if (csrfToken) return csrfToken
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/csrf-token/`, {
-      credentials: 'include',
-    })
-    const data = await response.json()
-    csrfToken = data.csrfToken || ''
-    return csrfToken
-  } catch (error) {
-    console.error('Failed to get CSRF token:', error)
-    csrfToken = ''
-    return ''
-  }
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://be.1nsta.ir/api'
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.69:8000/api'
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  // Get CSRF token for POST/PUT/DELETE requests
-  if (options?.method && ['POST', 'PUT', 'DELETE'].includes(options.method)) {
-    const token = await getCSRFToken()
-    options.headers = {
-      ...options.headers,
-      'X-CSRFToken': token,
-    }
-  }
-
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     credentials: 'include',
     ...options,
