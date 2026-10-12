@@ -40,7 +40,7 @@ export default function StoryViewersPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 z-50"
+            className="fixed inset-0 bg-[#0C0F14]/80 z-50"
           />
 
           {/* Panel */}
@@ -49,7 +49,7 @@ export default function StoryViewersPanel({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-0 bg-black text-white z-50 overflow-y-auto"
+            className="fixed inset-0 bg-[#0C0F14] text-white z-50 overflow-y-auto"
           >
             {/* Header */}
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">

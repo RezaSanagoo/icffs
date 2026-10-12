@@ -1,7 +1,16 @@
 
 from rest_framework import serializers
 
-from .models import Viewer, Profile, Viewer, Highlight
+from .models import (
+    Highlight,
+    Profile,
+    Story,
+    StoryInteractiveElement,
+    StoryMentionTarget,
+    StoryLinkTarget,
+    Viewer,
+)
+
 
 class ViewerSerializer(serializers.ModelSerializer):
     avatarUrl = serializers.SerializerMethodField()
@@ -60,6 +69,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     highlights = HighlightSerializer(many=True, read_only=True)
     viewerImage = serializers.ImageField(source='viewvers', read_only=True, allow_null=True, required=False)
     viewerImage2 = serializers.ImageField(source='viewvers2', read_only=True, allow_null=True, required=False)
+    viewerImage3 = serializers.ImageField(
+    source="viewvers3",
+    read_only=True,
+    allow_null=True,
+    required=False
+    )
 
     class Meta:
         model = Profile
@@ -79,65 +94,43 @@ class ProfileSerializer(serializers.ModelSerializer):
             'highlights',
             'viewerImage',
             'viewerImage2',
+            'viewerImage3',
         ]
         read_only_fields = ['id']
 
     def to_representation(self, instance):
-        """Map model fields to API response format."""
         data = super().to_representation(instance)
-        avatar_url = ''
-        if instance.avatar:
-            request = self.context.get('request')
-            if request:
-                avatar_url = request.build_absolute_uri(instance.avatar.url)
-            else:
-                avatar_url = instance.avatar.url
+        request = self.context.get("request")
 
-        last_post_image_url = ''
-        if instance.last_post_image:
-            request = self.context.get('request')
-            if request:
-                last_post_image_url = request.build_absolute_uri(instance.last_post_image.url)
-            else:
-                last_post_image_url = instance.last_post_image.url
+        def get_file_url(file_field):
+            if not file_field:
+                return ""
 
-        viewer_image_url = ''
-        if instance.viewvers:
-            request = self.context.get('request')
             if request:
-                viewer_image_url = request.build_absolute_uri(instance.viewvers.url)
-            else:
-                viewer_image_url = instance.viewvers.url
-        viewer2_image_url = ''
-        if instance.viewvers2:
-            request = self.context.get('request')
-            if request:
-                viewer2_image_url = request.build_absolute_uri(instance.viewvers2.url)
-            else:
-                viewer2_image_url = instance.viewvers2.url
+                return request.build_absolute_uri(file_field.url)
+
+            return file_field.url
 
         return {
-            'id': str(data['id']),
-            'username': data['username'],
-            'fullName': data.get('fullName', data['username']),
-            'avatar': avatar_url,
-            'isVerified': data.get('isVerified', False),
-            'postsCount': data.get('postsCount', data.get('postCount', 0)),
-            'followersCount': data.get('followersCount', 0),
-            'followingCount': data.get('followingCount', 0),
-            'bio': data.get('bio', ''),
-            'postCount': data.get('postCount', data.get('postsCount', 0)),
-            'reachCount': data.get('reachCount', 0),
-            'lastPostImage': last_post_image_url,
-            'highlights': data.get('highlights', []),
-            'viewerImage': viewer_image_url,
-            'viewerImage2': viewer2_image_url,
+            "id": str(instance.id),
+            "username": instance.username,
+            "fullName": instance.display_name or instance.username,
+            "avatar": get_file_url(instance.avatar),
+            "isVerified": instance.is_verified,
+            "postsCount": instance.post_count,
+            "followersCount": instance.followers_count,
+            "followingCount": instance.following_count,
+            "bio": instance.bio,
+            "postCount": instance.post_count,
+            "reachCount": instance.reach_count,
+            "lastPostImage": get_file_url(instance.last_post_image),
+            "highlights": data.get("highlights", []),
+            "viewerImage": get_file_url(instance.viewvers),
+            "viewerImage2": get_file_url(instance.viewvers2),
+            "viewerImage3": get_file_url(instance.viewvers3),
         }
 
 
-from rest_framework import serializers
-
-from .models import Story, StoryInteractiveElement, StoryMentionTarget
 
 
 class StoryMentionTargetSerializer(serializers.ModelSerializer):
@@ -167,37 +160,75 @@ class StoryMentionTargetSerializer(serializers.ModelSerializer):
 
 class StoryInteractiveElementSerializer(serializers.ModelSerializer):
     mentionTarget = StoryMentionTargetSerializer(
-        source='mention_target',
+        source="mention_target",
         read_only=True
     )
 
-    elementType = serializers.CharField(source='element_type', read_only=True)
+    elementType = serializers.CharField(
+        source="element_type",
+        read_only=True
+    )
 
     class Meta:
         model = StoryInteractiveElement
         fields = [
-            'id',
-            'elementType',
-            'title',
-            'url',
-            'mentionTarget',
-            'x',
-            'y',
-            'order',
+            "id",
+            "elementType",
+            "title",
+            "url",
+            "mentionTarget",
+            "x",
+            "y",
+            "order",
         ]
+
+    def validate(self, attrs):
+        element_type = attrs.get(
+            "element_type",
+            getattr(self.instance, "element_type", None)
+        )
+
+        url = attrs.get(
+            "url",
+            getattr(self.instance, "url", "")
+        )
+
+        link_target = attrs.get(
+            "link_target",
+            getattr(self.instance, "link_target", None)
+        )
+
+        if element_type == StoryInteractiveElement.TYPE_LINK:
+            if link_target and not url:
+                attrs["url"] = link_target.url
+
+            if not url and not link_target:
+                raise serializers.ValidationError({
+                    "url": "برای لینک، URL الزامی است."
+                })
+
+        return attrs
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
 
+        resolved_url = instance.url
+
+        if (
+            instance.element_type == StoryInteractiveElement.TYPE_LINK
+            and instance.link_target
+        ):
+            resolved_url = instance.link_target.url
+
         return {
-            'id': str(instance.id),
-            'elementType': data['elementType'],
-            'title': data['title'],
-            'url': data['url'],
-            'mentionTarget': data['mentionTarget'],
-            'x': float(instance.x),
-            'y': float(instance.y),
-            'order': instance.order,
+            "id": str(instance.id),
+            "elementType": data["elementType"],
+            "title": data["title"],
+            "url": resolved_url,
+            "mentionTarget": data["mentionTarget"],
+            "x": float(instance.x),
+            "y": float(instance.y),
+            "order": instance.order,
         }
 
 
@@ -235,12 +266,13 @@ class StorySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'createdAt', 'expiresAt']
 
     def get_mediaUrl(self, obj):
-        """Get full media URL."""
         if obj.media:
             request = self.context.get('request')
 
             if request:
-                return request.build_absolute_uri(obj.media.url)
+                return request.build_absolute_uri(obj.media.url).replace(
+                    'http://', 'https://', 1
+                )
 
             return obj.media.url
 

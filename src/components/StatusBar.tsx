@@ -20,7 +20,7 @@ export default function StatusBar() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-black px-4 py-1 flex items-center justify-between text-xs text-white">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-[#0C0F14] px-4 py-1 flex items-center justify-between text-xs text-white">
       <span>{formatTime(time)}</span>
       <div className="flex items-center gap-1">
         <div className="flex items-center gap-0.5">

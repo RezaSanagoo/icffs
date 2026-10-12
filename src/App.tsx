@@ -10,14 +10,16 @@ import Settings from './pages/Settings'
 import Search from './pages/Search'
 import Activity from './pages/Activity'
 import StoriesArchive from './pages/StoriesArchive'
+import { ThemeProvider } from './context/ThemeContext'
 
 function App() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <ThemeProvider>
+      <div className="app-shell min-h-screen">
       {/* <div className="p-2">
         <ProfileSwitcher />
       </div> */}
-      <Routes>
+        <Routes>
         <Route path="/feed" element={<Feed />} />
         <Route path="/search" element={<Search />} />
         <Route path="/activity" element={<Activity />} />
@@ -27,10 +29,10 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/archive/stories" element={<StoriesArchive />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+        </Routes>
+      </div>
+    </ThemeProvider>
   )
 }
 
 export default App
-

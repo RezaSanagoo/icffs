@@ -4,10 +4,6 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
-import os
-import tempfile
-from django.core.files import File
-from django.core.files.base import ContentFile
 
 from .utils import generate_video_thumbnail
 
@@ -65,8 +61,7 @@ class Profile(models.Model):
     last_post_image = models.ImageField(upload_to='last_post_images/', blank=True, null=True)
     viewvers = models.ImageField(upload_to='last_post_images/', blank=True, null=True)
     viewvers2 = models.ImageField(upload_to='last_post_images/', blank=True, null=True)
-
-    
+    viewvers3 = models.ImageField(upload_to="last_post_images/", blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -208,6 +203,35 @@ class StoryMentionTarget(models.Model):
             return f"{self.display_name} (@{self.username})"
         return f"@{self.username}"
 
+class StoryLinkTarget(models.Model):
+    """
+    Reusable saved link targets for stories.
+    Admin can create and select these links for story link elements.
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    title = models.CharField(
+        max_length=120,
+        help_text="عنوان لینک برای نمایش در ادمین"
+    )
+    url = models.URLField(
+        unique=True,
+        help_text="آدرس کامل لینک، مثلا https://example.com"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["title"]
+        verbose_name = "لینک استوری"
+        verbose_name_plural = "لینک‌های استوری"
+
+    def __str__(self):
+        return f"{self.title} - {self.url}"
 
 class StoryInteractiveElement(models.Model):
     """
@@ -262,6 +286,16 @@ class StoryInteractiveElement(models.Model):
         blank=True,
         help_text="Required for Visit Link type."
     )
+    
+    link_target = models.ForeignKey(
+    "StoryLinkTarget",
+    on_delete=models.SET_NULL,
+    blank=True,
+    null=True,
+    related_name="story_elements",
+    help_text="لینک ذخیره‌شده برای استفاده در استوری"
+    )
+
 
     mention_target = models.ForeignKey(
         StoryMentionTarget,
@@ -308,21 +342,30 @@ class StoryInteractiveElement(models.Model):
     def clean(self):
         from django.core.exceptions import ValidationError
 
-        if self.element_type == self.TYPE_LINK and not self.url:
-            raise ValidationError({
-                'url': 'URL is required for Visit Link elements.'
-            })
+        if self.element_type == self.TYPE_LINK:
+            if self.link_target and not self.url:
+                self.url = self.link_target.url
+
+            if not self.url and not self.link_target:
+                raise ValidationError({
+                    "url": "برای نوع لینک، انتخاب لینک ذخیره‌شده یا وارد کردن URL الزامی است."
+                })
 
         if self.element_type == self.TYPE_MENTION and not self.mention_target:
             raise ValidationError({
-                'mention_target': 'Mention target is required for Mention elements.'
+                "mention_target": "برای نوع منشن، انتخاب Mention Target الزامی است."
             })
 
+
     def save(self, *args, **kwargs):
+        if self.element_type == self.TYPE_LINK and self.link_target:
+            self.url = self.link_target.url
+
         if self.position_preset != self.POSITION_CUSTOM:
             self.apply_position_preset()
 
         super().save(*args, **kwargs)
+
 
     def apply_position_preset(self):
         """

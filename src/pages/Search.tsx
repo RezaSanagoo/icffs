@@ -3,7 +3,7 @@ import { Search as SearchIcon } from 'lucide-react'
 export default function Search() {
   return (
     <div className="pb-20">
-      <header className="sticky top-0 bg-black border-b border-gray-800 z-10 px-4 py-3">
+      <header className="sticky top-0 bg-[#0C0F14] border-b border-gray-800 z-10 px-4 py-3">
         <div className="flex items-center gap-3 bg-gray-900 rounded-lg px-4 py-2">
           <SearchIcon size={20} className="text-gray-500" />
           <input

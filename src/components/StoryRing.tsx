@@ -44,7 +44,7 @@ export default function StoryRing({
           hasNewStories ? 'gradient-ring' : 'bg-gray-600'
         } flex items-center justify-center transition-transform active:scale-95`}
       >
-        <div className="w-full h-full rounded-full bg-black p-[2px]">
+        <div className="w-full h-full rounded-full bg-[#0C0F14] p-[2px]">
           <div className="w-full h-full rounded-full overflow-hidden">
             <img
               src={avatar}

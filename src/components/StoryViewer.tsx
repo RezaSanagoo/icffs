@@ -626,7 +626,7 @@ export default function StoryViewer() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 overflow-hidden bg-[#0a0a0a]"
+        className="app-story-viewer fixed inset-0 z-50 overflow-hidden bg-[#0a0a0a]"
       >
         <div className="pointer-events-none absolute inset-0 hidden sm:block">
           <div
@@ -639,7 +639,7 @@ export default function StoryViewer() {
                   : undefined,
             }}
           />
-          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 bg-[#0C0F14]/70" />
         </div>
 
         <div className="relative flex h-full w-full items-center justify-center">
@@ -688,10 +688,10 @@ export default function StoryViewer() {
               stiffness: 320,
               damping: 30,
             }}
-            className="relative h-full w-full overflow-hidden bg-black shadow-2xl sm:h-[min(94dvh,920px)] sm:w-auto sm:aspect-[9/16] sm:rounded-2xl"
+            className="relative h-full w-full overflow-hidden bg-[#0C0F14] shadow-2xl sm:h-[min(94dvh,920px)] sm:w-auto sm:aspect-[9/16] sm:rounded-2xl"
           >
             <div
-              className="absolute inset-0 select-none overflow-hidden bg-black"
+              className="absolute inset-0 select-none overflow-hidden bg-[#0C0F14]"
               onClick={handleContentClick}
               onPointerDown={handlePointerDown}
               onPointerUp={handlePointerUp}
@@ -710,7 +710,7 @@ export default function StoryViewer() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.985 }}
                   transition={{ duration: 0.22 }}
-                  className="absolute inset-0 flex h-[calc(100vw*1.777)] w-full items-center justify-center bg-black"
+                  className="absolute inset-0 flex h-[calc(100vw*1.777)] w-full items-center justify-center bg-[#0C0F14]"
                 >
                   {currentStory.mediaType === "image" ? (
                     <img
@@ -839,7 +839,7 @@ export default function StoryViewer() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
                   >
-                    <div className="flex h-14 w-14 items-center justify-center gap-1.5 rounded-full bg-black/35 backdrop-blur-md">
+                    <div className="flex h-14 w-14 items-center justify-center gap-1.5 rounded-full bg-[#0C0F14]/35 backdrop-blur-md">
                       <span className="h-6 w-1.5 rounded-full bg-white" />
                       <span className="h-6 w-1.5 rounded-full bg-white" />
                     </div>
@@ -870,7 +870,7 @@ export default function StoryViewer() {
                     }}
                   >
                     {showHitboxes && (
-                      <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-black/65 px-3 py-1 text-[11px] font-semibold text-white shadow-xl backdrop-blur-md">
+                      <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#0C0F14]/65 px-3 py-1 text-[11px] font-semibold text-white shadow-xl backdrop-blur-md">
                         {element.elementType === "link"
                           ? "Visit Link"
                           : "Mention"}
@@ -1020,6 +1020,7 @@ export default function StoryViewer() {
         activeStoryId={activeInsightsStoryId}
         viewers={activeProfile?.viewerImage}
         viewers2={activeProfile?.viewerImage2}
+        viewers3={activeProfile?.viewerImage3}
         onSelectStory={(id) => {
           if (id === activeInsightsStoryId) return;
           setInsightsStoryId(id);
@@ -1040,7 +1041,7 @@ function StoryInteractivePopup({ element }: ActiveStoryPopupProps) {
 
     const content = (
       <>
-        <div className="relative flex items-center justify-center gap-2  min-w-[10px]   rounded-[10px]  px-2 py-2 bg-black/10 text-white backdrop-blur-lg z-10">
+        <div className="relative flex items-center justify-center gap-2  min-w-[10px]   rounded-[10px]  px-2 py-2 bg-[#0C0F14]/10 text-white backdrop-blur-lg z-10">
           <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full mr-1">
             {target.avatarUrl ? (
               <img
@@ -1068,7 +1069,7 @@ function StoryInteractivePopup({ element }: ActiveStoryPopupProps) {
             <ChevronRight size={18} />
           </div>
         </div>
-        <div className="absolute block bottom-0 left-1/2 h-10 w-10 -translate-x-1/2 rotate-45  backdrop-blur-2xl rounded bg-black/40" />
+        <div className="absolute block bottom-0 left-1/2 h-10 w-10 -translate-x-1/2 rotate-45  backdrop-blur-2xl rounded bg-[#0C0F14]/40" />
       </>
     );
 
@@ -1094,7 +1095,7 @@ function StoryInteractivePopup({ element }: ActiveStoryPopupProps) {
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="relative block min-w-[110px]  rounded-[10px]  px-3 py-3 bg-black/10 drop-shadow-lg text-white backdrop-blur-lg z-10"
+        className="relative block min-w-[110px]  rounded-[10px]  px-3 py-3 bg-[#0C0F14]/10 drop-shadow-lg text-white backdrop-blur-lg z-10"
       >
         <div className="flex items-center gap-1">
           <div className="min-w-0 flex-1">
@@ -1112,7 +1113,7 @@ function StoryInteractivePopup({ element }: ActiveStoryPopupProps) {
           <ChevronRight size={20} className="shrink-0 opacity-80" />
         </div>
       </a>
-      <div className="absolute block bottom-0 left-1/2 h-12 w-12 -translate-x-1/2 rotate-45  backdrop-blur-2xl rounded bg-black/40" />
+      <div className="absolute block bottom-0 left-1/2 h-12 w-12 -translate-x-1/2 rotate-45  backdrop-blur-2xl rounded bg-[#0C0F14]/40" />
     </>
   );
 }
@@ -1152,7 +1153,7 @@ function ViewerState({ children }: { children: React.ReactNode }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+        className="app-story-viewer fixed inset-0 z-50 flex items-center justify-center bg-[#0C0F14]"
     >
       {children}
     </motion.div>

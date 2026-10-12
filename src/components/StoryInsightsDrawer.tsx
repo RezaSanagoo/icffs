@@ -1,31 +1,21 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  useMemo,
-  useState,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-} from 'react'
-import { X, Info, Camera } from 'lucide-react'
-import { StoryInsights, Story } from '../types'
-import { BiBarChart } from 'react-icons/bi'
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from 'recharts'
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Camera, Info, X } from "lucide-react";
+import { BiBarChart } from "react-icons/bi";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Story, StoryInsights } from "../types";
 
 interface Props {
-  isOpen: boolean
-  onClose: () => void
-  insights?: StoryInsights
-  isInsightsLoading?: boolean
-  viewers?: string
-  viewers2?: string
-  stories: Story[]
-  activeStoryId?: string
-  onSelectStory?: (id: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  insights?: StoryInsights;
+  isInsightsLoading?: boolean;
+  viewers?: string;
+  viewers2?: string;
+  viewers3?: string;
+  stories: Story[];
+  activeStoryId?: string;
+  onSelectStory?: (id: string) => void;
 }
 
 const EMPTY_INSIGHTS: StoryInsights = {
@@ -37,52 +27,39 @@ const EMPTY_INSIGHTS: StoryInsights = {
   nonFollowersReach: 0,
   viewsTimeline: [],
   viewers: [],
-}
-const clamp = (value: number, min: number, max: number) => {
-  return Math.min(Math.max(value, min), max)
-}
+};
 
-const round1 = (value: number) => {
-  return Math.round(value * 10) / 10
-}
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
 
-const roundInt = (value: number) => {
-  return Math.max(0, Math.round(value))
-}
+const round1 = (value: number) => Math.round(value * 10) / 10;
 
-/**
- * Stable pseudo random based on story id + salt
- * خروجی این تابع برای هر استوری ثابت می‌ماند
- */
+const roundInt = (value: number) => Math.max(0, Math.round(value));
+
 const seededRandom = (seed: string) => {
-  let hash = 2166136261
+  let hash = 2166136261;
 
-  for (let i = 0; i < seed.length; i += 1) {
-    hash ^= seed.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
 
-  hash += hash << 13
-  hash ^= hash >>> 7
-  hash += hash << 3
-  hash ^= hash >>> 17
-  hash += hash << 5
+  hash += hash << 13;
+  hash ^= hash >>> 7;
+  hash += hash << 3;
+  hash ^= hash >>> 17;
+  hash += hash << 5;
 
-  return (hash >>> 0) / 4294967295
-}
+  return (hash >>> 0) / 4294967295;
+};
 
-const randomRange = (
-  seed: string,
-  min: number,
-  max: number,
-  precision: number = 4
-) => {
-  const r = seededRandom(seed)
-  const value = min + r * (max - min)
-  const p = Math.pow(10, precision)
+const randomRange = (seed: string, min: number, max: number, precision = 4) => {
+  const randomValue = seededRandom(seed);
+  const value = min + randomValue * (max - min);
+  const multiplier = 10 ** precision;
 
-  return Math.round(value * p) / p
-}
+  return Math.round(value * multiplier) / multiplier;
+};
 
 export default function StoryInsightsDrawer({
   isOpen,
@@ -91,68 +68,117 @@ export default function StoryInsightsDrawer({
   isInsightsLoading = false,
   viewers,
   viewers2,
+  viewers3,
   stories,
   activeStoryId,
   onSelectStory,
 }: Props) {
-  const [page, setPage] = useState<'insights' | 'viewers'>('insights')
-
-  const [showEntryHero, setShowEntryHero] = useState(false)
-  const [entryStoryId, setEntryStoryId] = useState<string | null>(null)
-  const [hasPlayedOpenAnimation, setHasPlayedOpenAnimation] = useState(false)
+  const [page, setPage] = useState<"insights" | "viewers">("insights");
+  const [showEntryHero, setShowEntryHero] = useState(false);
+  const [entryStoryId, setEntryStoryId] = useState<string | null>(null);
+  const [hasPlayedOpenAnimation, setHasPlayedOpenAnimation] = useState(false);
 
   const [visualActiveStoryId, setVisualActiveStoryId] = useState<
     string | undefined
-  >(activeStoryId || stories[0]?.id)
+  >(activeStoryId || stories[0]?.id);
 
-  const thumbnailsContainerRef = useRef<HTMLDivElement | null>(null)
-  const storyRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const thumbnailsContainerRef = useRef<HTMLDivElement | null>(null);
+  const storyRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const safeInsights: StoryInsights = insights ?? EMPTY_INSIGHTS
+  // نگه داشته شده تا اگر بعداً از اطلاعات واقعی backend استفاده شد آماده باشد.
+  const safeInsights = insights ?? EMPTY_INSIGHTS;
+  void safeInsights;
 
-  const activeStory = stories.find((s) => s.id === activeStoryId)
+  const activeStory = stories.find((story) => story.id === activeStoryId);
+  const selectedStoryId =
+    visualActiveStoryId || activeStoryId || stories[0]?.id;
 
-  useEffect(() => {
-    if (activeStoryId) {
-      setVisualActiveStoryId(activeStoryId)
+  const selectedStoryIndex = Math.max(
+    0,
+    stories.findIndex((story) => story.id === selectedStoryId),
+  );
+
+  // استوری‌های زوج از تصویر دوم و استوری‌های فرد از تصویر سوم استفاده می‌کنند.
+  // استوری اول index=0 است، بنابراین تصویر دوم را نمایش می‌دهد.
+  const alternatingViewerImage =
+    selectedStoryIndex % 2 === 0 ? viewers2 : viewers3;
+
+  /**
+   * فقط ویوی خام backend را برمی‌گرداند.
+   */
+  const getRawStoryViews = (story?: Story) => {
+    if (!story) return 0;
+
+    const rawValue = (story as any).viewcount ?? (story as any).views ?? 0;
+    const numericValue = Number(rawValue);
+
+    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 0;
+  };
+
+  /**
+   * ویوی نهایی استوری را محاسبه می‌کند.
+   *
+   * اگر استوری ویوی واقعی داشته باشد:
+   *     همان مقدار واقعی برگردانده می‌شود.
+   *
+   * اگر ویوی استوری صفر باشد:
+   *     ویوی نهایی استوری قبلی گرفته می‌شود،
+   *     سپس مقدار deterministic بین 190 تا 310 از آن کم می‌شود.
+   *
+   * این تابع recursive است؛ بنابراین چند استوری صفر پشت‌سرهم
+   * نیز به‌صورت زنجیره‌ای محاسبه می‌شوند.
+   */
+  function getResolvedStoryViews(story?: Story): number {
+    if (!story) return 0;
+
+    const rawViews = getRawStoryViews(story);
+
+    // اگر backend مقدار معتبر دارد، همان مقدار استفاده می‌شود.
+    if (rawViews > 0) {
+      return rawViews;
     }
-  }, [activeStoryId])
 
-  useEffect(() => {
-    if (!visualActiveStoryId && stories[0]?.id) {
-      setVisualActiveStoryId(stories[0].id)
+    const currentIndex = stories.findIndex(
+      (currentStory) => currentStory.id === story.id,
+    );
+
+    // استوری اول، استوری قبلی ندارد.
+    if (currentIndex <= 0) {
+      return 0;
     }
-  }, [stories, visualActiveStoryId])
 
-  const getStoryViews = (story?: Story) => {
-    if (!story) return 0
-    return Number((story as any).viewcount ?? (story as any).views ?? 0)
+    const previousStory = stories[currentIndex - 1];
+
+    // نکته مهم:
+    // اینجا از getResolvedStoryViews استفاده شده، نه getRawStoryViews.
+    // بنابراین اگر استوری قبلی هم صفر باشد، مقدار محاسبه‌شده‌ی آن استفاده می‌شود.
+    const previousResolvedViews = getResolvedStoryViews(previousStory);
+
+    if (previousResolvedViews <= 0) {
+      return 0;
+    }
+
+    const storySeed = String(
+      story.id || activeStoryId || `story-${currentIndex}`,
+    );
+
+    const subtractAmount = roundInt(
+      randomRange(`${storySeed}-zero-view-fallback`, 190, 310, 3),
+    );
+
+    return Math.max(0, previousResolvedViews - subtractAmount);
   }
 
   const getStoryTag = (story?: Story) => {
-    if (!story) return ''
-    return (story as any).tag || (story as any).storyTag || ''
-  }
+    if (!story) return "";
 
-  const activeStoryViews = getStoryViews(activeStory)
-
-  const formatCompact = (value?: number) => {
-    const n = Number(value || 0)
-
-    if (n >= 1000000) {
-      return `${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`
-    }
-
-    if (n >= 1000) {
-      return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K`
-    }
-
-    return String(n)
-  }
-
-  const formatNumber = (value?: number) => {
-    return Number(value || 0).toLocaleString('en-US')
-  }
+    return (
+      (story as any).tag ||
+      (story as any).storyTag ||
+      (story as any).mention ||
+      ""
+    );
+  };
 
   const getStoryThumbnail = (story: Story) => {
     return (
@@ -160,322 +186,311 @@ export default function StoryInsightsDrawer({
       (story as any).thumbnail ||
       (story as any).mediaUrl ||
       (story as any).file ||
-      ''
-    )
-  }
+      ""
+    );
+  };
 
-  const getStoryViewer = (story: Story) => {
-    return (story as any).viewerImage || (story as any).viewverImage || ''
-  }
+  const getStoryViewerImage = (story: Story) => {
+    return (story as any).viewerImage || (story as any).viewverImage || "";
+  };
 
-  const getStoryUsername = (story?: Story) => {
-    if (!story) return 'story'
+  const formatCompact = (value?: number) => {
+    const numberValue = Number(value || 0);
 
-    return (
-      (story as any).username ||
-      (story as any).profile?.username ||
-      (story as any).profileUsername ||
-      'story'
-    )
-  }
+    if (numberValue >= 1_000_000) {
+      return `${(numberValue / 1_000_000).toFixed(
+        numberValue % 1_000_000 === 0 ? 0 : 1,
+      )}M`;
+    }
+
+    if (numberValue >= 1_000) {
+      return `${(numberValue / 1_000).toFixed(
+        numberValue % 1_000 === 0 ? 0 : 1,
+      )}K`;
+    }
+
+    return String(numberValue);
+  };
+
+  const formatNumber = (value?: number) => {
+    return Number(value || 0).toLocaleString("en-US");
+  };
 
   const centerStoryById = (
     storyId?: string,
-    behavior: ScrollBehavior = 'smooth'
+    behavior: ScrollBehavior = "smooth",
   ) => {
-    const id = storyId || visualActiveStoryId || activeStoryId
-    if (!id) return
+    const id = storyId || visualActiveStoryId || activeStoryId;
 
-    const container = thumbnailsContainerRef.current
-    const target = storyRefs.current[id]
+    if (!id) return;
 
-    if (!container || !target) return
+    const container = thumbnailsContainerRef.current;
+    const target = storyRefs.current[id];
 
-    const containerRect = container.getBoundingClientRect()
-    const targetRect = target.getBoundingClientRect()
+    if (!container || !target) return;
 
-    const currentScrollLeft = container.scrollLeft
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
 
     const targetCenter =
       targetRect.left -
       containerRect.left +
-      currentScrollLeft +
-      targetRect.width / 2
+      container.scrollLeft +
+      targetRect.width / 2;
 
-    const nextScrollLeft = targetCenter - container.clientWidth / 2
+    const nextScrollLeft = targetCenter - container.clientWidth / 2;
 
     container.scrollTo({
       left: Math.max(0, nextScrollLeft),
       behavior,
-    })
-  }
+    });
+  };
 
   const handleSelectThumbnail = (storyId: string) => {
-    setVisualActiveStoryId(storyId)
-    onSelectStory?.(storyId)
+    setVisualActiveStoryId(storyId);
+    onSelectStory?.(storyId);
 
     requestAnimationFrame(() => {
-      centerStoryById(storyId, 'smooth')
-    })
+      centerStoryById(storyId, "smooth");
+    });
 
     window.setTimeout(() => {
-      centerStoryById(storyId, 'smooth')
-    }, 340)
-  }
+      centerStoryById(storyId, "smooth");
+    }, 340);
+  };
+
+  useEffect(() => {
+    if (activeStoryId) {
+      setVisualActiveStoryId(activeStoryId);
+    }
+  }, [activeStoryId]);
+
+  useEffect(() => {
+    if (!visualActiveStoryId && stories[0]?.id) {
+      setVisualActiveStoryId(stories[0].id);
+    }
+  }, [stories, visualActiveStoryId]);
 
   useEffect(() => {
     if (!isOpen) {
-      setShowEntryHero(false)
-      setEntryStoryId(null)
-      setHasPlayedOpenAnimation(false)
-      return
+      setShowEntryHero(false);
+      setEntryStoryId(null);
+      setHasPlayedOpenAnimation(false);
+      return;
     }
 
     if (activeStoryId && !hasPlayedOpenAnimation) {
-      setVisualActiveStoryId(activeStoryId)
-      setEntryStoryId(activeStoryId)
-      setShowEntryHero(true)
-      setHasPlayedOpenAnimation(true)
+      setVisualActiveStoryId(activeStoryId);
+      setEntryStoryId(activeStoryId);
+      setShowEntryHero(true);
+      setHasPlayedOpenAnimation(true);
 
-      const t = window.setTimeout(() => {
-        setShowEntryHero(false)
+      const timeoutId = window.setTimeout(() => {
+        setShowEntryHero(false);
 
         requestAnimationFrame(() => {
-          centerStoryById(activeStoryId, 'auto')
+          centerStoryById(activeStoryId, "auto");
 
           requestAnimationFrame(() => {
-            centerStoryById(activeStoryId, 'smooth')
-          })
-        })
-      }, 520)
+            centerStoryById(activeStoryId, "smooth");
+          });
+        });
+      }, 520);
 
       return () => {
-        window.clearTimeout(t)
-      }
+        window.clearTimeout(timeoutId);
+      };
     }
-  }, [isOpen, activeStoryId, hasPlayedOpenAnimation])
+
+    return undefined;
+  }, [isOpen, activeStoryId, hasPlayedOpenAnimation]);
 
   useLayoutEffect(() => {
-    if (!isOpen || !visualActiveStoryId || showEntryHero) return
+    if (!isOpen || !visualActiveStoryId || showEntryHero) return;
 
-    const raf = requestAnimationFrame(() => {
-      centerStoryById(visualActiveStoryId, 'instant')
-    })
+    const animationFrameId = requestAnimationFrame(() => {
+      centerStoryById(visualActiveStoryId, "auto");
+    });
 
-    const t = window.setTimeout(() => {
-      centerStoryById(visualActiveStoryId, 'instant')
-    }, 340)
+    const timeoutId = window.setTimeout(() => {
+      centerStoryById(visualActiveStoryId, "auto");
+    }, 340);
 
     return () => {
-      cancelAnimationFrame(raf)
-      window.clearTimeout(t)
-    }
-  }, [visualActiveStoryId, isOpen, showEntryHero, stories.length])
-
-const metrics = useMemo(() => {
-  const storySeed = String(
-    activeStory?.id ||
-      activeStoryId ||
-      visualActiveStoryId ||
-      'fallback-story'
-  )
+      cancelAnimationFrame(animationFrameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [visualActiveStoryId, isOpen, showEntryHero, stories.length]);
 
   /**
-   * فقط عدد views از خود استوری خوانده می‌شود.
-   * تمام اعداد دیگر فقط از همین عدد ساخته می‌شوند.
+   * تمام Insights فقط از views نهایی محاسبه می‌شوند.
    */
-  const views = Math.max(
-    0,
-    Number(
-      (activeStory as any)?.viewcount ??
-        (activeStory as any)?.views ??
-        0
-    )
-  )
+  const metrics = useMemo(() => {
+    const storySeed = String(
+      activeStory?.id ||
+        activeStoryId ||
+        visualActiveStoryId ||
+        "fallback-story",
+    );
 
-  /**
-   * Views audience split
-   * Followers همیشه بین 98.2 تا 99.7
-   */
-  const followersPercent = round1(
-    randomRange(`${storySeed}-views-followers-percent`, 98.2, 99.7, 3)
-  )
+    const views = Math.max(0, getResolvedStoryViews(activeStory));
 
-  const nonFollowersPercent = round1(100 - followersPercent)
+    const followersPercent = round1(
+      randomRange(`${storySeed}-views-followers-percent`, 98.2, 99.7, 3),
+    );
 
-  /**
-   * Interaction audience split
-   * در Interactions نسبت Followers کمی بالاتر از Views است.
-   */
-  const interactionFollowersPercent = round1(
-    clamp(
-      followersPercent +
-        randomRange(`${storySeed}-interactions-followers-boost`, 0.1, 0.25, 3),
-      98.4,
-      99.9
-    )
-  )
+    const nonFollowersPercent = round1(100 - followersPercent);
 
-  const interactionNonFollowersPercent = round1(
-    100 - interactionFollowersPercent
-  )
+    const interactionFollowersPercent = round1(
+      clamp(
+        followersPercent +
+          randomRange(
+            `${storySeed}-interactions-followers-boost`,
+            0.1,
+            0.25,
+            3,
+          ),
+        98.4,
+        99.9,
+      ),
+    );
 
-  /**
-   * Accounts reached
-   * معمولاً reach از views کمتر است.
-   */
-  const accountsReached = roundInt(
-    views * randomRange(`${storySeed}-accounts-reached`, 0.82, 0.94, 4)
-  )
+    const interactionNonFollowersPercent = round1(
+      100 - interactionFollowersPercent,
+    );
 
-  /**
-   * Interactions
-   * همه از views ساخته می‌شوند.
-   */
-  const likes = roundInt(
-    views * randomRange(`${storySeed}-likes`, 0.012, 0.032, 4)
-  )
+    const accountsReached = roundInt(
+      views * randomRange(`${storySeed}-accounts-reached`, 0.82, 0.94),
+    );
 
-  const replies = roundInt(
-    views * randomRange(`${storySeed}-replies`, 0.001, 0.006, 4)
-  )
+    const likes = roundInt(
+      views * randomRange(`${storySeed}-likes`, 0.0029, 0.0027),
+    );
 
-  const shares = roundInt(
-    views * randomRange(`${storySeed}-shares`, 0.006, 0.022, 4)
-  )
+    const replies = roundInt(
+      views * randomRange(`${storySeed}-replies`, 0.001, 0.002),
+    );
 
-  /**
-   * اگر لینک/استیکر داری، عددش باز هم از views ساخته می‌شود.
-   * اگر نمی‌خواهی همیشه نمایش داده شوند، پایین‌تر condition دارد.
-   */
-  const linkClicks = roundInt(
-    views * randomRange(`${storySeed}-link-clicks`, 0.002, 0.014, 4)
-  )
+    const shares = roundInt(
+      views * randomRange(`${storySeed}-shares`, 0.006, 0.022),
+    );
 
-  const stickerTaps = roundInt(
-    views * randomRange(`${storySeed}-sticker-taps`, 0.001, 0.011, 4)
-  )
+    const linkClicks = roundInt(
+      views * randomRange(`${storySeed}-link-clicks`, 0.002, 0.014),
+    );
 
-  const interactions =
-    likes + replies + shares + linkClicks + stickerTaps
+    const stickerTaps = roundInt(
+      views * randomRange(`${storySeed}-sticker-taps`, 0.001, 0.011),
+    );
 
-  /**
-   * Navigation
-   * همه بر اساس views ساخته می‌شوند.
-   */
-  const forward = roundInt(
-    views * randomRange(`${storySeed}-forward`, 0.58, 0.82, 4)
-  )
+    const interactions = likes + replies + shares + linkClicks + stickerTaps;
 
-  const exited = roundInt(
-    views * randomRange(`${storySeed}-exited`, 0.08, 0.18, 4)
-  )
+    const forward = roundInt(
+      views * randomRange(`${storySeed}-forward`, 0.58, 0.82),
+    );
 
-  const nextStory = roundInt(
-    views * randomRange(`${storySeed}-next-story`, 0.04, 0.12, 4)
-  )
+    const exited = roundInt(
+      views * randomRange(`${storySeed}-exited`, 0.08, 0.18),
+    );
 
-  const back = roundInt(
-    views * randomRange(`${storySeed}-back`, 0.002, 0.018, 4)
-  )
+    const nextStory = roundInt(
+      views * randomRange(`${storySeed}-next-story`, 0.04, 0.12),
+    );
 
-  const navigation = forward + exited + nextStory + back
+    const back = roundInt(
+      views * randomRange(`${storySeed}-back`, 0.002, 0.018),
+    );
 
-  /**
-   * Profile activity
-   */
-  const profileVisits = roundInt(
-    views * randomRange(`${storySeed}-profile-visits`, 0.002, 0.012, 4)
-  )
+    const navigation = forward + exited + nextStory + back;
 
-  const follows = roundInt(
-    profileVisits *
-      randomRange(`${storySeed}-follows`, 0.02, 0.16, 4)
-  )
+    const profileVisits = roundInt(
+      views * randomRange(`${storySeed}-profile-visits`, 0.002, 0.012),
+    );
 
-  const profileActivity = profileVisits + follows
+    const follows = roundInt(
+      profileVisits * randomRange(`${storySeed}-follows`, 0.02, 0.16),
+    );
 
-  return {
-    views,
+    const profileActivity = profileVisits + follows;
 
-    followersPercent,
-    nonFollowersPercent,
-    interactionFollowersPercent,
-    interactionNonFollowersPercent,
+    return {
+      views,
 
-    accountsReached,
+      followersPercent,
+      nonFollowersPercent,
+      interactionFollowersPercent,
+      interactionNonFollowersPercent,
 
-    interactions,
-    likes,
-    replies,
-    shares,
-    linkClicks,
-    stickerTaps,
+      accountsReached,
 
-    navigation,
-    forward,
-    exited,
-    nextStory,
-    back,
+      interactions,
+      likes,
+      replies,
+      shares,
+      linkClicks,
+      stickerTaps,
 
-    profileVisits,
-    follows,
-    profileActivity,
-  }
-}, [activeStory, activeStoryId, visualActiveStoryId])
+      navigation,
+      forward,
+      exited,
+      nextStory,
+      back,
+
+      profileVisits,
+      follows,
+      profileActivity,
+    };
+  }, [activeStory, activeStoryId, visualActiveStoryId, stories]);
 
   const viewsChartData = useMemo(
     () => [
       {
-        name: 'Followers',
-        value: Number(metrics.followersPercent || 0),
-        color: '#d946ef',
+        name: "Followers",
+        value: metrics.followersPercent,
+        color: "#d946ef",
       },
       {
-        name: 'Non-followers',
-        value: Number(metrics.nonFollowersPercent || 0),
-        color: '#7c3aed',
+        name: "Non-followers",
+        value: metrics.nonFollowersPercent,
+        color: "#7c3aed",
       },
     ],
-    [metrics.followersPercent, metrics.nonFollowersPercent]
-  )
+    [metrics.followersPercent, metrics.nonFollowersPercent],
+  );
 
-const interactionsChartData = useMemo(
-  () => [
-    {
-      name: 'Followers',
-      value:
-        metrics.interactions > 0
-          ? Number(metrics.interactionFollowersPercent  || 0)
-          : 0,
-      color: '#d946ef',
-    },
-    {
-      name: 'Non-followers',
-      value:
-        metrics.interactions > 0
-          ? Number(metrics.interactionNonFollowersPercent || 0)
-          : 0,
-      color: '#7c3aed',
-    },
-  ],
-  [
-    metrics.interactions,
-    metrics.interactionFollowersPercent,
-    metrics.interactionNonFollowersPercent,
-  ]
-)
+  const interactionsChartData = useMemo(
+    () => [
+      {
+        name: "Followers",
+        value:
+          metrics.interactions > 0 ? metrics.interactionFollowersPercent : 0,
+        color: "#d946ef",
+      },
+      {
+        name: "Non-followers",
+        value:
+          metrics.interactions > 0 ? metrics.interactionNonFollowersPercent : 0,
+        color: "#7c3aed",
+      },
+    ],
+    [
+      metrics.interactions,
+      metrics.interactionFollowersPercent,
+      metrics.interactionNonFollowersPercent,
+    ],
+  );
 
-
-
-  const activeStoryTag = getStoryTag(activeStory)
+  const activeStoryExtras = activeStory as any;
+  const activeStoryTag = getStoryTag(activeStory);
 
   const entryStory =
-    stories.find((s) => s.id === entryStoryId) || activeStory || stories[0]
+    stories.find((story) => story.id === entryStoryId) ||
+    activeStory ||
+    stories[0];
 
-  const entryThumb = entryStory ? getStoryThumbnail(entryStory) : ''
-  const entryViewerImage = entryStory ? getStoryViewer(entryStory) : ''
-  const entryViews = entryStory ? getStoryViews(entryStory) : 0
+  const entryThumbnail = entryStory ? getStoryThumbnail(entryStory) : "";
+
+  const entryViews = entryStory ? getResolvedStoryViews(entryStory) : 0;
 
   return (
     <AnimatePresence>
@@ -487,27 +502,27 @@ const interactionsChartData = useMemo(
             exit={{ opacity: 0 }}
             transition={{ duration: 0.08 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-[#0C0F14]/80 backdrop-blur-sm"
           />
 
           <motion.div
-            initial={{ y: '100%' }}
+            initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            exit={{ y: "100%" }}
             transition={{
               duration: 0.12,
               ease: [0.4, 0, 1, 1],
             }}
-            className="fixed inset-0 z-50 overflow-hidden bg-[#050505] text-white"
+            className="fixed inset-0 z-50 overflow-hidden bg-[#0C0F14] text-white"
           >
-            <div className="flex h-full flex-col bg-[#050505]">
-              <div className="relative bg-[#111111]">
-                <div className="relative z-20 flex items-center justify-between px-3 pt-3 pb-3">
+            <div className="flex h-full flex-col bg-[#0C0F14]">
+              <div className="relative app-insights-header bg-[#111111]">
+                <div className="relative z-20 flex items-center justify-between px-3 pb-3 pt-3">
                   <button
                     type="button"
                     className="flex h-7 w-7 items-center justify-center rounded-full text-white active:scale-95"
                   >
-                    <img src="/6.png" alt="" />
+                    <img src="/6.png" alt="" className="app-insights-icon" />
                   </button>
 
                   <button
@@ -524,20 +539,20 @@ const interactionsChartData = useMemo(
                     <motion.div
                       initial={{
                         opacity: 1,
-                        x: '-50%',
+                        x: "-50%",
                         y: 0,
-                        left: '50%',
+                        left: "50%",
                         top: 0,
-                        width: '100vw',
-                        height: '100vh',
+                        width: "100vw",
+                        height: "100vh",
                         borderRadius: 0,
                         scale: 1,
                       }}
                       animate={{
                         opacity: 0,
-                        x: '-50%',
+                        x: "-50%",
                         y: 0,
-                        left: '50%',
+                        left: "50%",
                         top: 78,
                         width: 56,
                         height: 100,
@@ -552,24 +567,28 @@ const interactionsChartData = useMemo(
                         duration: 0.5,
                         ease: [0.22, 1, 0.36, 1],
                       }}
-                      className="pointer-events-none absolute z-30 overflow-hidden bg-black shadow-2xl"
+                      className="pointer-events-none absolute z-30 overflow-hidden bg-[#0C0F14] shadow-2xl"
                     >
-                      {entryThumb ? (
+                      {entryThumbnail ? (
                         <img
-                          src={entryThumb}
+                          src={entryThumbnail}
                           alt=""
                           draggable={false}
                           className="h-full w-full select-none object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#050505]">
+                        <div className="flex h-full w-full items-center justify-center bg-[#0C0F14]">
                           <Camera size={36} className="text-white" />
                         </div>
                       )}
 
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-2 pt-8">
                         <div className="flex items-center justify-center gap-1 text-xs font-semibold text-white">
-                          <img src="/7.png" className="w-[14px] grayscale brightness-200" alt="" />
+                          <img
+                            src="/7.png"
+                            className="w-[14px] grayscale brightness-200"
+                            alt=""
+                          />
                           <span>{entryViews}</span>
                         </div>
                       </div>
@@ -584,27 +603,28 @@ const interactionsChartData = useMemo(
                   >
                     <AnimatePresence initial={false}>
                       {stories.map((story) => {
-                        const active = story.id === visualActiveStoryId
-                        const thumb = getStoryThumbnail(story)
-                        const storyViews = getStoryViews(story)
+                        const isActive = story.id === visualActiveStoryId;
+
+                        const thumbnail = getStoryThumbnail(story);
+                        const storyViews = getResolvedStoryViews(story);
 
                         return (
                           <motion.button
                             key={story.id}
-                            ref={(el) => {
-                              storyRefs.current[story.id] = el
+                            ref={(element) => {
+                              storyRefs.current[story.id] = element;
                             }}
                             type="button"
                             onClick={() => handleSelectThumbnail(story.id)}
                             initial={{
                               opacity: 0,
                               scale: 0.92,
-                              width: active ? 56 : 48,
+                              width: isActive ? 56 : 48,
                             }}
                             animate={{
                               opacity: 1,
                               scale: 1,
-                              width: active ? 56 : 48,
+                              width: isActive ? 56 : 48,
                             }}
                             exit={{
                               opacity: 0,
@@ -621,56 +641,46 @@ const interactionsChartData = useMemo(
                             <motion.div
                               initial={false}
                               animate={{
-                                width: active ? 56 : 48,
-                                height: active ? 100 : 84,
-                                scale: active ? 1.1 : 1,
-                                opacity: active ? 1 : 0.8,
+                                width: isActive ? 56 : 48,
+                                height: isActive ? 100 : 84,
+                                scale: isActive ? 1.1 : 1,
+                                opacity: isActive ? 1 : 0.8,
                               }}
                               transition={{
-                                width: {
-                                  duration: 0.28,
-                                  ease: [0.22, 1, 0.36, 1],
-                                },
-                                height: {
-                                  duration: 0.28,
-                                  ease: [0.22, 1, 0.36, 1],
-                                },
-                                scale: {
-                                  duration: 0.28,
-                                  ease: [0.22, 1, 0.36, 1],
-                                },
-                                opacity: {
-                                  duration: 0.18,
-                                  ease: 'easeOut',
-                                },
+                                duration: 0.28,
+                                ease: [0.22, 1, 0.36, 1],
                               }}
                               className={[
-                                'relative overflow-hidden rounded-md bg-black shadow-sm will-change-transform',
-                                active ? 'ring-2 ring-[#3a3a3a]' : '',
-                              ].join(' ')}
+                                "relative overflow-hidden rounded-md bg-[#0C0F14] shadow-sm will-change-transform",
+                                isActive ? "ring-2 ring-[#3a3a3a]" : "",
+                              ].join(" ")}
                             >
-                              {thumb ? (
+                              {thumbnail ? (
                                 <img
-                                  src={thumb}
+                                  src={thumbnail}
                                   alt=""
                                   draggable={false}
                                   className="h-full w-full select-none object-cover"
                                 />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-[#050505]">
+                                <div className="flex h-full w-full items-center justify-center bg-[#0C0F14]">
                                   <Camera size={24} className="text-white" />
                                 </div>
                               )}
 
                               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-1 pb-1 pt-5">
-                                <div className="flex items-center justify-center gap-0.5 text-[10px] font-semibold text-white">
-                                  <img src="/7.png" className="w-[11px] grayscale brightness-200" alt="" />
-                                  <span className="text-[10px]">{storyViews}</span>
+                                <div className="flex items-center justify-center gap-0.5 text-[10px] font-semibold !text-white">
+                                  <img
+                                    src="/7.png"
+                                    className="w-[11px] grayscale brightness-200"
+                                    alt=""
+                                  />
+                                  <span className=" !text-white">{storyViews}</span>
                                 </div>
                               </div>
                             </motion.div>
                           </motion.button>
-                        )
+                        );
                       })}
                     </AnimatePresence>
 
@@ -678,28 +688,28 @@ const interactionsChartData = useMemo(
                       type="button"
                       className="relative shrink-0 pt-4 active:scale-95"
                     >
-                      <div className="flex h-[84px] w-[48px] items-center justify-center rounded-md bg-black ring-1 ring-white/10">
+                      <div className="flex h-[84px] w-[48px] items-center justify-center rounded-md bg-[#0C0F14] ring-1 ring-white/10">
                         <Camera size={25} className="text-white" />
                       </div>
                     </button>
                   </div>
 
-                  <div className="absolute bottom-0 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[12px] border-b-[12px] border-x-transparent border-b-[#050505]" />
+                  <div className="app-insights-pointer absolute bottom-0 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[12px] border-x-transparent" />
                 </div>
               </div>
 
-              <div className="flex h-[58px] items-center border-b border-white/10 bg-[#050505] px-3">
+              <div className="flex h-[58px] items-center border-b border-white/10 bg-[#0C0F14] px-3">
                 <button
                   type="button"
-                  onClick={() => setPage('insights')}
+                  onClick={() => setPage("insights")}
                   className={[
-                    'relative flex h-full min-w-[58px] items-center justify-center',
-                    page === 'insights' ? 'text-[#1f81c7]' : 'text-zinc-400',
-                  ].join(' ')}
+                    "relative flex h-full min-w-[58px] items-center justify-center",
+                    page === "insights" ? "text-[#1f81c7]" : "text-zinc-400",
+                  ].join(" ")}
                 >
                   <BiBarChart size={27} />
 
-                  {page === 'insights' && (
+                  {page === "insights" && (
                     <motion.div
                       layoutId="insights-tab-indicator"
                       className="absolute bottom-0 left-0 right-0 mx-auto h-[2px] w-full rounded-full bg-[#1f81c7]"
@@ -707,41 +717,41 @@ const interactionsChartData = useMemo(
                   )}
                 </button>
 
-<button
-  type="button"
-  onClick={() => setPage('viewers')}
-  className={[
-    'relative ml-4 flex h-full items-center gap-2 px-1 transition-colors duration-200',
-    page === 'viewers' ? 'text-[#1f81c7]' : 'text-zinc-400',
-  ].join(' ')}
->
-  <img
-    src="/7.png"
-    className={[
-      'w-[23px] transition-all duration-200',
-      page === 'viewers' 
-        ? 'opacity-100 ' 
-        : 'opacity-70 grayscale brightness-200',
-    ].join(' ')}
-    alt=""
-  />
-  <span
-    className={[
-      'text-[13px] font-bold',
-      page === 'viewers' ? 'text-[#1f81c7]' : 'text-zinc-400',
-    ].join(' ')}
-  >
-    {formatCompact(metrics.views)}
-  </span>
+                <button
+                  type="button"
+                  onClick={() => setPage("viewers")}
+                  className={[
+                    "relative ml-4 flex h-full items-center gap-2 px-1 transition-colors duration-200",
+                    page === "viewers" ? "text-[#1f81c7]" : "text-zinc-400",
+                  ].join(" ")}
+                >
+                  <img
+                    src="/7.png"
+                    className={[
+                      "w-[23px] transition-all duration-200",
+                      page === "viewers"
+                        ? "opacity-100"
+                        : "opacity-70 grayscale brightness-200",
+                    ].join(" ")}
+                    alt=""
+                  />
 
-  {page === 'viewers' && (
-    <motion.div
-      layoutId="insights-tab-indicator"
-      className="absolute bottom-0 left-0 right-0 mx-auto h-[2px] w-full rounded-full bg-[#1f81c7]"
-    />
-  )}
-</button>
+                  <span
+                    className={[
+                      "text-[13px] font-bold",
+                      page === "viewers" ? "text-[#1f81c7]" : "text-zinc-400",
+                    ].join(" ")}
+                  >
+                    {formatCompact(metrics.views)}
+                  </span>
 
+                  {page === "viewers" && (
+                    <motion.div
+                      layoutId="viewers-tab-indicator"
+                      className="absolute bottom-0 left-0 right-0 mx-auto h-[2px] w-full rounded-full bg-[#1f81c7]"
+                    />
+                  )}
+                </button>
 
                 <button
                   type="button"
@@ -751,13 +761,18 @@ const interactionsChartData = useMemo(
                 </button>
               </div>
 
-              <div className="relative min-h-0 flex-1 overflow-hidden bg-[#050505]">
+              <div className="relative min-h-0 flex-1 overflow-hidden bg-[#0C0F14]">
                 <motion.div
-                  animate={{ x: page === 'insights' ? '0%' : '-50%' }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  animate={{
+                    x: page === "insights" ? "0%" : "-50%",
+                  }}
+                  transition={{
+                    duration: 0.22,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                   className="flex h-full w-[200%]"
                 >
-                  <div className="h-full w-1/2 flex-shrink-0 overflow-y-auto bg-[#050505] pb-10">
+                  <div className="h-full w-1/2 flex-shrink-0 overflow-y-auto bg-[#0C0F14] pb-10">
                     <AnimatePresence mode="wait">
                       {isInsightsLoading ? (
                         <motion.div
@@ -765,7 +780,6 @@ const interactionsChartData = useMemo(
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          transition={{ duration: 0.01 }}
                           className="px-4 pt-4"
                         >
                           <div className="space-y-3">
@@ -836,28 +850,30 @@ const interactionsChartData = useMemo(
                                 label="Likes"
                                 value={metrics.likes}
                               />
+
                               <MetricSummaryRow
                                 label="Replies"
                                 value={metrics.replies}
                               />
+
                               <MetricSummaryRow
                                 label="Shares"
                                 value={metrics.shares}
                               />
 
-                              {metrics.linkClicks > 0 && (
+                              {activeStoryExtras?.LinkClicks ? (
                                 <MetricSummaryRow
                                   label="Link clicks"
                                   value={metrics.linkClicks}
                                 />
-                              )}
+                              ) : null}
 
-                              {metrics.stickerTaps > 0 && (
+                              {activeStoryExtras?.stickerTaps ? (
                                 <MetricSummaryRow
                                   label="Sticker taps"
                                   value={metrics.stickerTaps}
                                 />
-                              )}
+                              ) : null}
                             </div>
                           </div>
 
@@ -871,14 +887,17 @@ const interactionsChartData = useMemo(
                                 label="Forward"
                                 value={metrics.forward}
                               />
+
                               <MetricSummaryRow
                                 label="Exited"
                                 value={metrics.exited}
                               />
+
                               <MetricSummaryRow
                                 label="Next story"
                                 value={metrics.nextStory}
                               />
+
                               <MetricSummaryRow
                                 label="Back"
                                 value={metrics.back}
@@ -896,6 +915,7 @@ const interactionsChartData = useMemo(
                                 label="Profile visits"
                                 value={metrics.profileVisits}
                               />
+
                               <MetricSummaryRow
                                 label="Follows"
                                 value={metrics.follows}
@@ -906,8 +926,10 @@ const interactionsChartData = useMemo(
                           {activeStoryTag ? (
                             <>
                               <Divider />
+
                               <div className="px-4 pt-5">
                                 <SectionTitle title="Mention" />
+
                                 <div className="mt-6 space-y-4">
                                   <MetricSummaryRow
                                     label={`@${activeStoryTag}`}
@@ -922,35 +944,43 @@ const interactionsChartData = useMemo(
                     </AnimatePresence>
                   </div>
 
-                  <div className="h-full w-1/2 flex-shrink-0 overflow-y-auto bg-[#050505] pb-10">
+                  <div className="h-full w-1/2 flex-shrink-0 overflow-y-auto bg-[#0C0F14] pb-10">
                     <motion.div
                       key={`viewers-${activeStoryId}`}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{
+                        duration: 0.22,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
                       className="pt-4"
                     >
                       <div className="mb-3 flex items-center justify-between px-4">
-                        <h3 className="text-[16px] font-semibold ">
-                          Viewers
-                        </h3>
+                        <h3 className="text-[16px] font-semibold">Viewers</h3>
 
-                        <span className="text-[13px] font-semibold ">
+                        <span className="text-[13px] font-semibold">
                           {formatNumber(metrics.views)}
                         </span>
                       </div>
 
                       {viewers ? (
-                        <img src={viewers} alt="" className="w-full" />
-                        
+                        <img src={viewers} alt="Viewers" className="w-full" />
                       ) : (
                         <div className="px-4 pt-6 text-center text-sm text-zinc-500">
                           No viewers image found
                         </div>
                       )}
-                      {viewers2 ? (
-                        <img src={viewers2} alt="" className="w-full" />
-                        
+
+                      {alternatingViewerImage ? (
+                        <img
+                          src={alternatingViewerImage}
+                          alt={
+                            selectedStoryIndex % 2 === 0
+                              ? "Viewers image 2"
+                              : "Viewers image 3"
+                          }
+                          className="w-full"
+                        />
                       ) : (
                         <div className="px-4 pt-6 text-center text-sm text-zinc-500">
                           No viewers image found
@@ -965,67 +995,35 @@ const interactionsChartData = useMemo(
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 function SectionTitle({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <h2 className="text-[19px] font-bold leading-none text-white">
-        {title}
-      </h2>
+      <h2 className="text-[19px] font-bold leading-none text-white">{title}</h2>
+
       <Info size={18} strokeWidth={2.2} className="text-zinc-400" />
     </div>
-  )
-}
-
-function InsightRow({
-  label,
-  value,
-  muted = false,
-}: {
-  label: string
-  value: number
-  muted?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span
-        className={[
-          'text-[16px] font-medium',
-          muted ? 'text-zinc-500' : 'text-zinc-200',
-        ].join(' ')}
-      >
-        {label}
-      </span>
-
-      <span
-        className={[
-          'text-[15px] font-semibold',
-          muted ? 'text-zinc-500' : 'text-white',
-        ].join(' ')}
-      >
-        {Number(value || 0).toLocaleString('en-US')}
-      </span>
-    </div>
-  )
+  );
 }
 
 function MetricSummaryRow({
   label,
   value,
 }: {
-  label: string
-  value: number | string
+  label: string;
+  value: number | string;
 }) {
   return (
     <div className="flex items-center justify-between py-0.5">
       <span className="text-[15px] text-zinc-200">{label}</span>
+
       <span className="text-[15px] font-semibold text-white">
-        {typeof value === 'number' ? value.toLocaleString('en-US') : value}
+        {typeof value === "number" ? value.toLocaleString("en-US") : value}
       </span>
     </div>
-  )
+  );
 }
 
 function DonutInsightChart({
@@ -1033,15 +1031,23 @@ function DonutInsightChart({
   value,
   data,
 }: {
-  title: string
-  value: number
-  data: { name: string; value: number; color: string }[]
+  title: string;
+  value: number;
+  data: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
 }) {
-    const chartData = data.map((item) => ({
+  const chartData = data.map((item) => ({
     ...item,
-    // اگر Non-followers است، حداقل ۳٪ برای نمایش در چارت، در غیر این صورت مقدار واقعی
-    displayValue: item.name === 'Non-followers' ? Math.max(item.value, 2.2) : item.value
+
+    // فقط برای نمایش slice نمودار است.
+    // مقدار نوشته‌شده پایین نمودار همچنان مقدار واقعی است.
+    displayValue:
+      item.name === "Non-followers" ? Math.max(item.value, 3) : item.value,
   }));
+
   return (
     <div className="pt-4">
       <div className="relative mx-auto h-[230px] w-[230px]">
@@ -1049,17 +1055,17 @@ function DonutInsightChart({
           <PieChart>
             <Pie
               data={chartData}
-              dataKey="displayValue" // استفاده از مقدار تغییر یافته برای ظاهر
+              dataKey="displayValue"
               innerRadius={88}
               outerRadius={103}
               startAngle={90}
               endAngle={-270}
               stroke="none"
               cornerRadius={6}
-              animationDuration={400} // سرعت انیمیشن اینجا تنظیم شد
+              animationDuration={400}
             >
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} radius={4} />
+                <Cell key={`chart-cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
           </PieChart>
@@ -1067,23 +1073,25 @@ function DonutInsightChart({
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[12px] text-zinc-500">{title}</span>
+
           <span className="mt-1 text-[22px] font-bold text-white">
-            {Number(value || 0).toLocaleString('en-US')}
+            {Number(value || 0).toLocaleString("en-US")}
           </span>
         </div>
       </div>
 
       <div className="mt-3 space-y-2">
-{data.map((item) => (
+        {data.map((item) => (
           <div key={item.name} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: item.color }}
               />
+
               <span className="text-[14px] text-zinc-200">{item.name}</span>
             </div>
-            {/* اینجا همچنان از item.value واقعی استفاده می‌کنیم */}
+
             <span className="text-[14px] text-white">
               {Number(item.value || 0).toFixed(1)}%
             </span>
@@ -1091,9 +1099,9 @@ function DonutInsightChart({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function Divider() {
-  return <div className="mt-8 h-[1px] w-full bg-white/10" />
+  return <div className="mt-8 h-[1px] w-full bg-white/10" />;
 }

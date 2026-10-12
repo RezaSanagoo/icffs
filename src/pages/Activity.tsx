@@ -5,9 +5,9 @@ export default function Activity() {
   const navigate = useNavigate()
 
   return (
-    <div className="pb-20 bg-black min-h-screen">
+    <div className="pb-20 bg-[#0C0F14] min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 bg-black border-b border-gray-800 z-10">
+      <header className="sticky top-0 bg-[#0C0F14] border-b border-gray-800 z-10">
         <div className="px-5 py-3 pb-2 flex items-center gap-4">
           <button onClick={() => navigate(-1)}>
             <ArrowLeft size={24} />

@@ -131,6 +131,10 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -255,6 +259,11 @@ UNFOLD = {
                         "title": "استوری‌ها",
                         "icon": "auto_stories",
                         "link": "/admin/stories/story/",
+                    },
+                    {
+                        "title": "افزودن گروهی استوری",
+                        "icon": "library_add",
+                        "link": "/admin/stories/story/bulk-add/",
                     },
                     {
                         "title": "اهداف منشن",

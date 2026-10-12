@@ -1,13 +1,25 @@
 {
-  "name": "Instagram",
+  "id": "/",
+  "name": "Instagram Analytics",
   "short_name": "Instagram",
   "description": "Instagram story analytics and insights dashboard",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#1F51FF",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en-US",
+  "background_color": "#000000",
+  "theme_color": "#0C0F14",
+  "categories": ["social", "productivity", "utilities"],
   "icons": [
+    {
+      "src": "/icon-92x92.png",
+      "sizes": "92x92",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
@@ -35,25 +47,57 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshot-1.png",
-      "sizes": "1280x1280",
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "1080x1894",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Story analytics dashboard"
+    },
+    {
+      "src": "/screenshots/mobile-stories.png",
+      "sizes": "1080x1894",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Stories performance overview"
+    },
+    {
+      "src": "/screenshots/mobile-insights.png",
+      "sizes": "1080x1894",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Audience and engagement insights"
     }
   ],
-  "categories": ["social", "productivity"],
   "shortcuts": [
     {
       "name": "View Stories",
       "short_name": "Stories",
       "description": "View and manage your stories",
-      "url": "/",
+      "url": "/?shortcut=stories",
       "icons": [
         {
-          "src": "/icon-96x96.png",
-          "sizes": "96x96"
+          "src": "/icon-92x92.png",
+          "sizes": "92x92",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Open Analytics",
+      "short_name": "Analytics",
+      "description": "Open story analytics dashboard",
+      "url": "/analytics?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/icon-92x92.png",
+          "sizes": "92x92",
+          "type": "image/png"
         }
       ]
     }
-  ]
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "prefer_related_applications": false
 }

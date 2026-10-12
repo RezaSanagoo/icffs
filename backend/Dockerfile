@@ -20,5 +20,7 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Pass the WSGI module explicitly so a missing/empty runtime app setting
+# cannot make Gunicorn boot with an empty module name.
+CMD ["gunicorn", "--config", "./gunicorn.conf.py", "config.wsgi:application"]
 

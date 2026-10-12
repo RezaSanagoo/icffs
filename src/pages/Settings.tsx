@@ -10,7 +10,7 @@ export default function Settings() {
 
   if (isLoading || !settings) {
     return (
-      <div className="pb-20 bg-black min-h-screen">
+      <div className="pb-20 bg-[#0C0F14] min-h-screen">
         <div className="px-4 py-4">
           <Skeleton className="h-10 w-10 rounded-full mb-4" />
           <Skeleton className="h-8 w-48 mb-6" />
@@ -27,9 +27,9 @@ export default function Settings() {
   }
 
   return (
-    <div className="pb-20 bg-black min-h-screen">
+    <div className="pb-20 bg-[#0C0F14] min-h-screen">
       {/* Header */}
-      <header className="sticky bg-black border-b border-gray-800 z-10">
+      <header className="sticky bg-[#0C0F14] border-b border-gray-800 z-10">
         <div className="px-4 py-3 flex items-center gap-4">
           <button onClick={() => navigate(-1)}>
             <ArrowLeft size={24} />

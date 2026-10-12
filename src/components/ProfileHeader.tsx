@@ -5,6 +5,7 @@ import { useProfiles, useSetActiveProfile } from '../hooks/useProfiles'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faThreads } from '@fortawesome/free-brands-svg-icons'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { useTheme } from '../context/ThemeContext'
 
 
 
@@ -21,9 +22,10 @@ export default function ProfileHeader({
   const [showDropdown, setShowDropdown] = useState(false)
   const { data: profiles } = useProfiles()
   const setActive = useSetActiveProfile()
+  const { theme, toggleTheme } = useTheme()
 
   return (
-    <header className="sticky  bg-black z-50">
+    <header className="sticky app-bg z-50">
       
 
       {/* Main header */}
@@ -32,7 +34,7 @@ export default function ProfileHeader({
       <button className="relative text-white">
             <FontAwesomeIcon icon={faPlus} className="text-[20px]" />
         </button>        
-      <button className="relative text-black">
+      <button className="relative text-transparent">
             <FontAwesomeIcon icon={faPlus} className="text-[20px]" />
         </button>    
         </div>    
@@ -47,7 +49,7 @@ export default function ProfileHeader({
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute top-full left-0 mt-2 bg-gray-900 rounded-lg shadow-lg min-w-48">
+            <div className="absolute top-full left-0 mt-2 app-panel rounded-lg shadow-lg min-w-48">
               {profiles?.map((profile) => (
                 <button
                   key={profile.id}
@@ -55,8 +57,8 @@ export default function ProfileHeader({
                     setActive.mutate(profile.id)
                     setShowDropdown(false)
                   }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-800 transition ${
-                    profile.username === username ? 'bg-gray-800' : ''
+                  className={`w-full text-left px-4 py-2 app-text transition ${
+                    profile.username === username ? 'bg-black/10' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -79,8 +81,14 @@ export default function ProfileHeader({
         </div>
         
         <div className="flex items-center gap-4">
-          <button className="relative">
-            <FontAwesomeIcon icon={faThreads} className="w-5 h-5 text-white" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="relative app-text transition-opacity hover:opacity-70"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+          >
+            <FontAwesomeIcon icon={faThreads} className="w-5 h-5" />
               {notificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-semibold rounded-full w-3 h-3 flex items-center justify-center">
                   {notificationCount > 9 ? '9+' : notificationCount}
@@ -95,4 +103,3 @@ export default function ProfileHeader({
     </header>
   )
 }
-

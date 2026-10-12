@@ -59,35 +59,35 @@ export default function StoriesArchive() {
   }, [isLoading, archivedStories.length])
 
   return (
-    <div className="bg-black h-dvh flex flex-col overflow-hidden">
+    <div className="app-bg h-dvh flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 bg-black border-b border-gray-800 z-10 shrink-0">
+      <header className="sticky top-0 app-bg border-b app-border z-10 shrink-0">
         <div className="px-4 py-3 flex items-center justify-between">
           <button onClick={() => navigate(-1)}>
             <ArrowLeft size={24} />
           </button>
           <div className="flex items-center gap-2">
             <h1 className="text-base font-semibold">Stories archive</h1>
-            <ChevronDown size={16} className="text-gray-400" />
+            <ChevronDown size={16} className="app-muted" />
           </div>
           <MoreVertical size={24} />
         </div>
       </header>
 
       {/* Filter Bar */}
-      <div className="flex sticky top-12 z-50 bg-black items-center justify-around border-b border-gray-800 shrink-0">
-        <img src="/3.png" alt="" className="absolute bg-black" />
-        <button className="w-16 py-3 border-b-2 border-white">
-          <RefreshCw size={20} />
+      <div className="flex sticky top-12 z-50 app-bg items-center justify-around border-b app-border shrink-0">
+        <img src="/3.png" alt="" className="absolute app-theme-image" />
+        <button className="w-16 py-3 border-b-2 app-border app-text">
+          <RefreshCw size={20} className='text-transparent' />
         </button>
         <button className="w-16 py-3">
-          <Heart size={20} className="text-gray-400" />
+          <Heart size={20} className="app-muted !text-transparent" />
         </button>
         <button className="w-16 py-3">
-          <Calendar size={20} className="text-gray-400" />
+          <Calendar size={20} className="app-muted !text-transparent" />
         </button>
         <button className="w-16 py-3">
-          <MapPin size={20} className="text-gray-400" />
+          <MapPin size={20} className="app-muted !text-transparent" />
         </button>
       </div>
 
@@ -98,7 +98,7 @@ export default function StoriesArchive() {
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : archivedStories.length === 0 ? (
-          <div className="flex items-center justify-center h-96 text-gray-400">
+          <div className="flex items-center justify-center h-96 app-muted">
             <p>No archived stories</p>
           </div>
         ) : (
@@ -109,7 +109,7 @@ export default function StoriesArchive() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05, duration: 0.2 }}
-                className="aspect-[9/16] bg-gray-900 relative overflow-hidden cursor-pointer"
+                className="aspect-[9/16] app-story-card relative overflow-hidden cursor-pointer"
                 onClick={() => navigate(`/stories?story=${story.id}`)}
               >
                 <img
@@ -122,11 +122,11 @@ export default function StoriesArchive() {
                 />
 
                 {story.showDate && (
-                  <div className="absolute top-2 left-2 flex flex-col items-center justify-center min-w-[40px] rounded-lg bg-black/90 px-2 py-1.5">
-                    <span className="text-white text-sm font-semibold leading-none">
+                  <div className="absolute top-2 left-2 flex flex-col items-center justify-center min-w-[40px] rounded-lg app-story-overlay px-2 py-1.5">
+                    <span className="app-text text-sm font-semibold leading-none">
                       {story.day}
                     </span>
-                    <span className="text-white/80 text-[10px] uppercase tracking-[0.2em] mt-1 leading-none">
+                    <span className="app-muted text-[10px] uppercase tracking-[0.2em] mt-1 leading-none">
                       {story.month}
                     </span>
                   </div>
@@ -134,7 +134,7 @@ export default function StoriesArchive() {
 
                 {story.durationLabel && (
                   <div className="absolute bottom-1 left-2">
-                    <span className="text-white text-[11px] font-medium">
+                    <span className="app-text text-[11px] font-medium">
                       {story.durationLabel}
                     </span>
                   </div>

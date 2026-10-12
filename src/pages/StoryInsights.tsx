@@ -27,7 +27,7 @@ export default function StoryInsights() {
 
   if (isLoading || optionsLoading) {
     return (
-      <div className="pb-20 bg-black min-h-screen">
+      <div className="pb-20 app-bg min-h-screen">
         <div className="px-4 py-4">
           <Skeleton className="h-10 w-10 rounded-full mb-4" />
           <Skeleton className="h-8 w-48 mb-6" />
@@ -46,7 +46,7 @@ export default function StoryInsights() {
 
   if (!insights) {
     return (
-      <div className="pb-20 flex flex-col items-center justify-center min-h-screen bg-black">
+      <div className="pb-20 flex flex-col items-center justify-center min-h-screen app-bg">
         <svg className="h-12 w-12 text-red-400 mb-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
         <p className="text-gray-400 text-lg">دریافت اطلاعات آنالیتیکس با خطا مواجه شد</p>
         <p className="text-gray-500 text-sm mt-2">لطفاً بعداً تلاش کنید یا ارتباط با سرور را بررسی نمایید.</p>
@@ -71,21 +71,21 @@ export default function StoryInsights() {
   const totalInteractions = interactionData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="pb-20 bg-black min-h-screen">
+    <div className="pb-20 app-bg min-h-screen">
       {/* Header */}
-      <header className="sticky top-6 bg-black border-b border-gray-800 z-10">
+      <header className="sticky top-6 app-bg border-b app-border z-10">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate(-1)}>
               <Settings size={20} />
             </button>
             {/* Story previews */}
-            <div className="w-12 h-20 rounded bg-gray-800 overflow-hidden">
+            <div className="w-12 h-20 rounded app-story-card overflow-hidden">
               <div className="w-full h-full bg-gradient-to-br from-yellow-600 to-gray-800 flex items-center justify-center">
                 <span className="text-white text-xs">Story</span>
               </div>
             </div>
-            <div className="w-12 h-20 rounded bg-gray-800 flex items-center justify-center border-2 border-dashed border-gray-600">
+            <div className="w-12 h-20 rounded app-story-card flex items-center justify-center border-2 border-dashed app-border">
               <span className="text-2xl">📷</span>
             </div>
           </div>
@@ -98,11 +98,11 @@ export default function StoryInsights() {
 
       {/* Tabs: گزینه‌های آنالیتیکس */}
       {insightsOptions && insightsOptions.length > 0 && (
-        <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-800 overflow-x-auto">
+        <div className="flex items-center gap-4 px-4 py-3 border-b app-border overflow-x-auto">
           {insightsOptions.filter(opt => opt.enabled).map(opt => (
             <button
               key={opt.key}
-              className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${activeTab === opt.key ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+              className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${activeTab === opt.key ? 'bg-blue-600 text-white' : 'app-story-card app-muted'}`}
               onClick={() => setActiveTab(opt.key)}
             >
               {opt.name}
@@ -168,7 +168,7 @@ export default function StoryInsights() {
             <div className="mb-6">
               <div className="text-sm font-semibold mb-3">Navigation</div>
               <div className="text-sm text-gray-400 mb-2">
-                Total: <span className="text-white font-semibold">{insights.navigation_total}</span>
+                Total: <span className="app-text font-semibold">{insights.navigation_total}</span>
               </div>
               <div className="space-y-2">
                 {insights.forward !== undefined && (
@@ -213,16 +213,16 @@ export default function StoryInsights() {
         {/* لیست ویورها */}
         {insights.viewers && insights.viewers.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-base font-semibold mb-3 text-white">Viewers</h3>
+            <h3 className="text-base font-semibold mb-3 app-text">Viewers</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {insights.viewers.map((viewer: any) => (
-                <div key={viewer.id} className="flex items-center gap-3 bg-gray-900 rounded-lg p-2">
+                <div key={viewer.id} className="flex items-center gap-3 app-story-card rounded-lg p-2">
                   <img
                     src={viewer.avatarUrl || '/default-avatar.png'}
                     alt={viewer.name}
                     className="w-10 h-10 rounded-full object-cover border border-gray-700"
                   />
-                  <span className="text-white text-sm font-medium">{viewer.name}</span>
+                  <span className="app-text text-sm font-medium">{viewer.name}</span>
                 </div>
               ))}
             </div>

@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "ir.app_1nsta.twa",
+        "sha256_cert_fingerprints": ["27:1F:8A:A5:80:05:D3:8C:27:0D:03:80:DC:18:86:6E:78:D1:F4:AC:3D:38:5E:86:81:17:E3:C0:7C:39:EF:03"]
+      }
+    }]

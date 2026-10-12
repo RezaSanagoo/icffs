@@ -45,11 +45,11 @@ export default function Profile() {
   const count = Number(value ?? 0)
 
   if (count >= 1_000_000) {
-    return `${(count / 1_000_000).toFixed(1)}M`
+    return `${(count / 1_000_000).toFixed(0)}M`
   }
 
   if (count >= 10_000) {
-    return `${(count / 1_000).toFixed(1)}K`
+    return `${(count / 1_000).toFixed(0)}K`
   }
 
   return count.toLocaleString()
@@ -58,7 +58,7 @@ export default function Profile() {
 
   return (
     <>
-    <div className="pb-20 bg-black min-h-screen">
+    <div className="pb-20 app-bg min-h-screen">
       {/* Header */}
       <ProfileHeader username={profile?.username || ''} notificationCount={9} />
 
@@ -68,6 +68,11 @@ export default function Profile() {
         <div className="flex items-start gap-4 mb-3">
           {/* Profile Picture */}
           <div className="relative">
+            {/* Profile note */}
+            <div className="profile-note absolute -top-1 left-0 z-10 flex h-[44px] w-[80px] items-center justify-center rounded-[19px] bg-[#34383e] px-2 text-center text-[11px] leading-[13px] shadow-lg">
+              <span>Unpopular<br />opinion...</span>
+              <span className="absolute -bottom-1 left-[52px] h-2 w-2 rotate-45 bg-[#34383e]" aria-hidden="true" />
+            </div>
             <div className="w-20 h-20 rounded-full overflow-hidden">
               <img
                 src={profile?.avatar || ''}
@@ -76,8 +81,8 @@ export default function Profile() {
               />
             </div>
             {/* Add Story Button */}
-            <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-black rounded-full border-2 border-black flex items-center justify-center">
-              <Plus size={14} className="text-white" />
+            <button className="profile-note-plus absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-zinc-900">
+              <Plus size={14} className="text-zinc-900" strokeWidth={2.5} />
             </button>
           </div>
 
@@ -107,8 +112,8 @@ export default function Profile() {
 
         {/* Name and Username */}
         <div className="mb-3">
-          <h2 className="text-sm font-semibold mb-1">{profile?.fullName || ''}</h2>
-          <div className="text-xs text-white font-bold rounded-full p-2 py-1 border border-zinc-400/20 flex justify-center items-center gap-1 w-fit"> <span className="-mt-1">@</span> {" "}  {profile?.username || ''}</div>
+          <h2 className="text-sm font-semibold mb-1 app-text">{profile?.fullName || ''}</h2>
+          <div className="text-xs app-text font-bold rounded-full p-2 py-1 app-border border flex justify-center items-center gap-1 w-fit"> <span className="-mt-1">@</span> {" "}  {profile?.username || ''}</div>
         </div>
 
         {/* Bio */}
@@ -119,13 +124,13 @@ export default function Profile() {
         )}
 
         {/* Professional dashboard */}
-        <div className="mb-3 rounded-lg bg-zinc-800/60 px-3 py-2">
+        <div className="mb-3 rounded-lg app-panel px-3 py-2">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold">Professional dashboard</p>
               <p className="text-xs text-zinc-400">
                 {reachCount > 0
-                  ? `${reachCount.toLocaleString()}M accounts reached in the last 30 days`
+                  ? `${formatFollowersCount(reachCount)} accounts reached in the last 30 days`
                   : 'No reach data yet'}
               </p>
             </div>
@@ -135,13 +140,14 @@ export default function Profile() {
 
         {/* Action Buttons */}
         <div className="flex gap-2 mb-4">
-          <button className="flex-1 bg-zinc-800/60 hover:bg-zinc-700 rounded-lg py-1.5 px-4 text-sm font-semibold transition-colors">
+          <a href={"https://be.1nsta.ir/admin/stories/profile/"+ profile.id +"/change/"} className="flex-1 app-panel text-center rounded-lg py-1.5 px-4 text-sm font-semibold transition-colors">
+         
             Edit profile
-          </button>
-          <button className="flex-1 bg-zinc-800/60 hover:bg-zinc-700 rounded-lg py-1.5 px-4 text-sm font-semibold transition-colors">
+            </a>
+          <button className="flex-1 app-panel rounded-lg py-1.5 px-4 text-sm font-semibold transition-colors">
             Share profile
           </button>
-          <button className="bg-zinc-800/60 hover:bg-zinc-700 rounded-lg py-1.5 px-3 transition-colors">
+          <button className="app-panel rounded-lg py-1.5 px-3 transition-colors">
             <UserCheck size={18} />
           </button>
         </div>
@@ -151,12 +157,12 @@ export default function Profile() {
         {/* Story Highlights */}
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide mb-4">
           {/* New Highlight */}
-          <div className="flex flex-col items-center min-w-[70px]">
+          <a href={`https://be.1nsta.ir/admin/stories/highlight/add/?profile=${profile?.id}`} className="flex flex-col items-center min-w-[70px]">
             <div className="w-16 h-16 rounded-full border-2 border-zinc-600 flex items-center justify-center mb-1">
               <Plus size={24} className="text-zinc-400" />
             </div>
             <span className="text-xs text-zinc-400">New</span>
-          </div>
+          </a>
 
           {profile?.highlights?.slice(0, 4).map((highlight) => (
             <div key={highlight.id} className="flex flex-col items-center min-w-[70px]">
@@ -182,18 +188,18 @@ export default function Profile() {
 
         {/* Content Tabs */}
         <div className="flex items-center justify-around -ml-4 w-screen border-b border-zinc-800 mt-4">
-          <img src="1.png" alt="" className='absolute bg-black ' />
-          <button className="w-12 py-3 flex items-center justify-center border-b-2 border-white">
-            <Grid3x3 size={24} />
+          <img src="1.png" alt="" className="absolute app-theme-image" />
+          <button className="w-12 text-transparent py-3 flex items-center justify-center border-b-2 border-white">
+            <Grid3x3 size={24} className="text-transparent" />
           </button>
-          <button className="w-12 py-3 flex items-center justify-center">
-            <Play size={24} className="text-zinc-400" />
+          <button className="w-12 text-transparent py-3 flex items-center justify-center">
+            <Play size={24} className="text-transparent" />
           </button>
-          <button className="w-12 py-3 flex items-center justify-center">
-            <RefreshCw size={24} className="text-zinc-400" />
+          <button className="w-12 text-transparent py-3 flex items-center justify-center">
+            <RefreshCw size={24} className="text-transparent" />
           </button>
-          <button className="w-12 py-3 flex items-center justify-center">
-            <UserCheck size={24} className="text-zinc-400" />
+          <button className="w-12 text-transparent py-3 flex items-center justify-center">
+            <UserCheck size={24} className="text-transparent" />
           </button>
         </div>
       </div>
@@ -226,4 +232,3 @@ export default function Profile() {
     </>
   )
 }
-

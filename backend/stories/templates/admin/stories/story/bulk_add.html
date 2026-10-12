@@ -1,0 +1,111 @@
+﻿{% extends "unfold/layouts/base.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .bulk-story-form { max-width: 1180px; direction: rtl; }
+    .bulk-story-form h1 { margin: 0 0 8px; font-size: 26px; }
+    .bulk-story-help { margin: 0 0 22px; color: var(--body-quiet-color, #6b7280); font-size: 14px; }
+    .bulk-story-toolbar { display: flex; align-items: end; gap: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 14px; background: #f8fafc; color: #111827; }
+    .bulk-story-toolbar label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .bulk-story-toolbar select { min-width: 280px; }
+    .bulk-story-rows { display: grid; gap: 14px; }
+    .bulk-story-row { display: grid; grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(145px, 1fr)); align-items: end; gap: 14px; padding: 18px; border: 1px solid #e5e7eb; border-radius: 14px; background: #ffffff; color: #111827; box-shadow: 0 2px 10px rgba(15, 23, 42, .05); }
+    .bulk-story-row h3 { grid-column: 1 / -1; margin: 0; font-size: 15px; }
+    .bulk-story-field { min-width: 0; }
+    .bulk-story-field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .bulk-story-field input, .bulk-story-field select { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #111827; padding: 8px 10px; }
+    .bulk-story-field input[type=file] { padding: 8px; }
+    .bulk-story-errors { grid-column: 1 / -1; margin: 0; color: #b91c1c; font-size: 12px; }
+    .bulk-story-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .bulk-story-actions button, .bulk-story-actions input, .bulk-story-actions a { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 9px; padding: 0 18px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .bulk-story-actions button, .bulk-story-actions input.default { border-color: #2563eb; background: #2563eb; color: #ffffff; }
+    .bulk-story-actions a { background: #ffffff; color: #334155; }
+    .bulk-story-defaults { margin: 0 0 20px; padding: 12px 16px; border-radius: 10px; color: #475569; background: #f8fafc; font-size: 13px; }
+    .dark .bulk-story-help { color: #cbd5e1; }
+    .dark .bulk-story-toolbar, .dark .bulk-story-row, .dark .bulk-story-defaults { border-color: #374151; background: #1f2937; color: #f8fafc; }
+    .dark .bulk-story-field input, .dark .bulk-story-field select { border-color: #4b5563; background: #111827; color: #f8fafc; }
+    .dark .bulk-story-actions a { border-color: #4b5563; background: #374151; color: #f8fafc; }
+    @media (max-width: 900px) { .bulk-story-row { grid-template-columns: repeat(2, minmax(150px, 1fr)); } .bulk-story-field:first-of-type { grid-column: 1 / -1; } }
+    @media (max-width: 560px) { .bulk-story-toolbar, .bulk-story-row { grid-template-columns: 1fr; display: grid; } .bulk-story-toolbar select { min-width: 0; width: 100%; } }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="bulk-story-form">
+    <h1>افزودن گروهی استوری</h1>
+    <p class="bulk-story-help">یک پروفایل را انتخاب کنید و برای هر ردیف فقط رسانه، نوع، مدت و تعداد بازدید را وارد کنید.</p>
+    <p class="bulk-story-defaults">تگ، لینک، استیکر و تاریخ‌ها به‌صورت خودکار با مقدار پیش‌فرض ذخیره می‌شوند. مدت پیش‌فرض ۵ ثانیه و تعداد بازدید پیش‌فرض صفر است.</p>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="bulk-story-toolbar">
+        <div>
+          <label for="id_profile">پروفایل</label>
+          <select id="id_profile" name="profile" required>
+            <option value="">انتخاب پروفایل</option>
+            {% for profile in profiles %}
+              <option value="{{ profile.pk }}" {% if selected_profile == profile.pk|stringformat:'s' %}selected{% endif %}>{{ profile }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if profile_error %}<p class="errornote">{{ profile_error }}</p>{% endif %}
+      </div>
+
+      {{ formset.management_form }}
+      <div id="bulk-story-rows" class="bulk-story-rows">
+        {% for form in formset %}
+          <section class="bulk-story-row">
+            <h3>استوری {{ forloop.counter }}</h3>
+            {{ form.non_field_errors }}
+            {% for field in form %}
+              <div class="bulk-story-field">
+                <label for="{{ field.id_for_label }}">
+                  {% if field.name == 'media' %}رسانه{% elif field.name == 'media_type' %}نوع رسانه{% elif field.name == 'duration' %}مدت (ثانیه){% else %}تعداد بازدید{% endif %}
+                </label>
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endfor %}
+          </section>
+        {% endfor %}
+      </div>
+
+      <template id="bulk-story-empty-form">
+        <section class="bulk-story-row">
+          <h3>استوری جدید</h3>
+          {% for field in formset.empty_form %}
+            <div class="bulk-story-field">
+              <label for="{{ field.id_for_label }}">
+                {% if field.name == 'media' %}رسانه{% elif field.name == 'media_type' %}نوع رسانه{% elif field.name == 'duration' %}مدت (ثانیه){% else %}تعداد بازدید{% endif %}
+              </label>
+              {{ field }}
+            </div>
+          {% endfor %}
+        </section>
+      </template>
+
+      <div class="bulk-story-actions">
+        <button type="button" class="button" id="add-story-row">افزودن ردیف</button>
+        <input type="submit" value="ذخیره همه استوری‌ها" class="default">
+        <a href="{% url 'admin:stories_story_changelist' %}" class="button">انصراف</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (() => {
+      const addButton = document.getElementById('add-story-row');
+      const rows = document.getElementById('bulk-story-rows');
+      const template = document.getElementById('bulk-story-empty-form');
+      const totalForms = document.getElementById('id_stories-TOTAL_FORMS');
+      if (!addButton || !rows || !template || !totalForms) return;
+      addButton.addEventListener('click', () => {
+        const index = Number(totalForms.value);
+        rows.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__prefix__', index));
+        totalForms.value = index + 1;
+      });
+    })();
+  </script>
+{% endblock %}

@@ -48,7 +48,8 @@
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
   body {
-    @apply bg-[#0C1014] text-white;
+    @apply text-white;
+    background: var(--app-bg);
     font-family: 'Instagram Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -63,6 +64,257 @@
   border-border{
     border-color: #262626;
   }
+}
+
+:root {
+  --app-bg: #0c0f14;
+  --app-text: #ffffff;
+  --app-muted: #a1a1aa;
+  --app-panel: rgba(39, 39, 42, 0.6);
+  --app-border: rgba(161, 161, 170, 0.2);
+  --app-surface: #181b21;
+  --app-surface-muted: #272a30;
+  --app-overlay: rgba(12, 15, 20, 0.8);
+}
+
+:root[data-theme='light'] {
+  --app-bg: #fafafa;
+  --app-text: #111827;
+  --app-muted: #71717a;
+  --app-panel: rgba(228, 228, 231, 0.8);
+  --app-border: rgba(63, 63, 70, 0.2);
+  --app-surface: #ffffff;
+  --app-surface-muted: #f1f1f3;
+  --app-overlay: rgba(250, 250, 250, 0.86);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+.app-shell,
+.app-bg {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.app-text { color: var(--app-text); }
+.app-muted { color: var(--app-muted); }
+.app-panel { background-color: var(--app-panel); }
+.app-border { border-color: var(--app-border); }
+
+/* Profile note and add-story control keep their contrast in both themes. */
+.profile-note { color: #ffffff !important; }
+.profile-note-plus { background-color: #ffffff !important; }
+.app-story-card {
+  background-color: var(--app-surface-muted);
+  color: var(--app-text);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.app-story-overlay {
+  background-color: var(--app-overlay);
+  color: var(--app-text);
+  backdrop-filter: blur(10px);
+}
+.app-story-viewer {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+}
+.app-insights-header {
+  background-color: #111111;
+  transition: background-color 180ms ease;
+}
+
+.app-insights-icon {
+  transition: filter 180ms ease;
+}
+
+.app-insights-pointer {
+  border-bottom: 12px solid #0c0f14;
+  transition: border-bottom-color 180ms ease;
+}
+
+:root[data-theme='light'] .app-insights-header {
+  background-color: #ffffff;
+}
+
+:root[data-theme='light'] .app-insights-icon {
+  filter: invert(1);
+}
+
+:root[data-theme='light'] .app-insights-pointer {
+  border-bottom-color: #ffffff;
+}
+
+.app-theme-image {
+  transition: filter 180ms ease;
+}
+
+:root[data-theme='light'] .app-theme-image {
+  filter: invert(1);
+}
+
+.app-bottom-nav {
+  border-top: 1px solid var(--app-border);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(14px);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.app-nav-item {
+  color: var(--app-muted);
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.app-nav-item:hover {
+  color: var(--app-text);
+}
+
+.app-nav-item:active {
+  transform: scale(0.94);
+}
+
+.app-nav-item-active {
+  color: var(--app-text);
+}
+
+.app-nav-icon {
+  transition: color 180ms ease, filter 180ms ease, transform 180ms ease;
+}
+
+.app-nav-item-active .app-nav-icon {
+  transform: translateY(-1px);
+}
+
+.app-nav-active-dot {
+  width: 4px;
+  height: 4px;
+  margin-top: 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.app-nav-item-active .app-nav-active-dot {
+  background: var(--app-text);
+  transform: scale(1);
+}
+
+:root[data-theme='light'] .app-nav-image {
+  filter: invert(1);
+}
+
+:root[data-theme='light'] .app-nav-send-icon {
+  filter: invert(1);
+}
+
+:root[data-theme='dark'] .app-nav-image {
+  filter: brightness(0) invert(1) brightness(0.85);
+}
+
+:root[data-theme='light'] body,
+:root[data-theme='light'] .text-white { color: var(--app-text); }
+
+/* Keep legacy Tailwind color utilities theme-aware across every page and overlay. */
+:root[data-theme='light'] [class*="bg-"][class*="0C0F14"],
+:root[data-theme='light'] [class*="bg-"][class*="0c0f14"],
+:root[data-theme='light'] [class~="bg-black"],
+:root[data-theme='light'] [class*="bg-"][class*="0a0a0a"] {
+  background-color: var(--app-bg) !important;
+}
+
+:root[data-theme='light'] [class~="bg-gray-900"],
+:root[data-theme='light'] [class~="bg-zinc-900"],
+:root[data-theme='light'] [class~="bg-zinc-800"],
+:root[data-theme='light'] [class~="bg-gray-800"] {
+  background-color: var(--app-surface-muted) !important;
+}
+
+:root[data-theme='light'] [class~="bg-gray-200"],
+:root[data-theme='light'] [class~="bg-gray-300"] {
+  background-color: #e4e4e7 !important;
+}
+
+:root[data-theme='light'] [class*="bg-"][class*="0C0F14/"],
+:root[data-theme='light'] [class*="bg-"][class*="0c0f14/"] {
+  background-color: var(--app-overlay) !important;
+}
+
+:root[data-theme='light'] [class~="text-black"],
+:root[data-theme='light'] [class~="text-white"],
+:root[data-theme='light'] [class*="text-white/"] {
+  color: var(--app-text) !important;
+}
+
+:root[data-theme='light'] [class~="text-gray-300"],
+:root[data-theme='light'] [class~="text-gray-400"],
+:root[data-theme='light'] [class~="text-gray-500"],
+:root[data-theme='light'] [class~="text-zinc-200"],
+:root[data-theme='light'] [class~="text-zinc-300"],
+:root[data-theme='light'] [class~="text-zinc-400"],
+:root[data-theme='light'] [class~="text-zinc-500"],
+:root[data-theme='light'] [class~="text-zinc-600"] {
+  color: var(--app-muted) !important;
+}
+
+:root[data-theme='light'] [class~="border-gray-800"],
+:root[data-theme='light'] [class~="border-gray-700"],
+:root[data-theme='light'] [class~="border-zinc-800"],
+:root[data-theme='light'] [class~="border-zinc-600"],
+:root[data-theme='light'] [class*="border-white/"] {
+  border-color: var(--app-border) !important;
+}
+
+:root[data-theme='light'] [class~="bg-white"],
+:root[data-theme='light'] [class~="bg-white/10"],
+:root[data-theme='light'] [class~="bg-white/12"],
+:root[data-theme='light'] [class~="bg-white/15"],
+:root[data-theme='light'] [class~="bg-white/20"] {
+  background-color: var(--app-surface-muted) !important;
+}
+
+/* Story playback is intentionally always dark, regardless of the app theme. */
+:root[data-theme='light'] .app-story-viewer,
+:root[data-theme='light'] .app-story-viewer [class*="bg-"][class*="0C0F14"],
+:root[data-theme='light'] .app-story-viewer [class*="bg-"][class*="0c0f14"],
+:root[data-theme='light'] .app-story-viewer [class*="bg-"][class*="0a0a0a"] {
+  background-color: #0c0f14 !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class*="bg-"][class*="0C0F14/"],
+:root[data-theme='light'] .app-story-viewer [class*="bg-"][class*="0c0f14/"] {
+  background-color: rgba(12, 15, 20, 0.8) !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="text-white"],
+:root[data-theme='light'] .app-story-viewer [class*="text-white/"] {
+  color: #ffffff !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="bg-white"] {
+  background-color: #ffffff !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="bg-white/10"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="bg-white/12"] {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="bg-white/15"] {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="bg-white/20"] {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+:root[data-theme='light'] .app-story-viewer [class~="text-black"] {
+  color: #111111 !important;
 }
 
 /* مخفی کردن اسکرول‌بار در کل سایت */
@@ -112,4 +364,3 @@ body::-webkit-scrollbar,
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
-

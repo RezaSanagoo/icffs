@@ -88,7 +88,7 @@ export default function StoryInsightsDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-[#0C0F14]/80 backdrop-blur-sm z-50"
           />
 
           {/* Drawer */}
@@ -97,7 +97,7 @@ export default function StoryInsightsDrawer({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28 }}
-            className="fixed inset-0 bg-black text-white z-50 overflow-hidden"
+            className="fixed inset-0 bg-[#0C0F14] text-white z-50 overflow-hidden"
           >
             {/* Header */}
             <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-zinc-800">

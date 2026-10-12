@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:stories_story_bulk_add' %}" class="addlink">افزودن گروهی استوری</a>
+  </li>
+  {{ block.super }}
+{% endblock %}

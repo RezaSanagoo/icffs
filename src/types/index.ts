@@ -21,6 +21,7 @@ export interface Profile {
   highlights: Highlight[]
   viewerImage: string
   viewerImage2: string
+  viewerImage3: string
 }
 
 export interface StoryMentionTarget {
